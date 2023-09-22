@@ -3,6 +3,7 @@ use core::fmt;
 use rand::Rng;
 
 use crate::cell::Cell;
+use crate::distance::Distance;
 use crate::color::Color;
 use crate::evaluation::{Evaluation, EvaluationTrait};
 
@@ -12,23 +13,6 @@ pub struct Board {
     board: Vec<Vec<Color>>,
     size: usize,
     score: f64,
-}
-
-#[derive(Debug, Clone, Copy)]
-enum Distance {
-    Reachable(usize),
-    Unreachable,
-    Unexplored,
-}
-
-impl std::fmt::Display for Distance {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Distance::Reachable(d) => write!(f, "{}", d),
-            Distance::Unreachable => write!(f, "X"),
-            Distance::Unexplored => write!(f, "."),
-        }
-    }
 }
 
 impl Board {

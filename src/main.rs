@@ -8,6 +8,7 @@ mod board;
 mod game;
 use game::Game;
 mod cell;
+mod distance;
 mod gui;
 //mod tournament;
 
