@@ -6,13 +6,14 @@ use crate::cell::Cell;
 use crate::distance::Distance;
 use crate::color::Color;
 use crate::evaluation::{Evaluation, EvaluationTrait};
+use crate::display::{write_column_labels, write_row};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Board {
-    board: Vec<Vec<Color>>,
-    size: usize,
-    score: f64,
+    pub board: Vec<Vec<Color>>,
+    pub size: usize,
+    pub score: f64,
 }
 
 impl Board {
@@ -280,35 +281,6 @@ impl fmt::Display for Board {
 
         write_column_labels(f, self.size(), (self.size() + 1) as usize)
     }
-}
-
-fn write_column_labels(f: &mut fmt::Formatter, board_size: usize, indent: usize) -> fmt::Result {
-    write_indent(f, indent)?;
-    write!(f," ")?;
-
-    for column in 0..board_size {
-        write!(f, " {} ", column + 1)?;
-    }
-
-    writeln!(f)
-}
-
-fn write_row(f: &mut fmt::Formatter, board: &Board, row: usize) -> fmt::Result {
-    write_indent(f, row)?;
-    write!(f, "{:2}\\", row + 1)?;
-
-    for column in 0..board.size() {
-        if column > 0 {
-            write!(f, "  ")?;
-        }
-        write!(f, "{}", board.board[row][column].to_char())?;
-    }
-
-    writeln!(f, "\\{:2}", row + 1)
-}
-
-fn write_indent(f: &mut fmt::Formatter, length: usize) -> fmt::Result {
-    write!(f, "{}", " ".repeat(length))
 }
 
 //test

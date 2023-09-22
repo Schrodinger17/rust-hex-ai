@@ -10,6 +10,7 @@ use game::Game;
 mod cell;
 mod distance;
 mod gui;
+mod display;
 //mod tournament;
 
 mod color;
