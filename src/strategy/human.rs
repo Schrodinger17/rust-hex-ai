@@ -2,8 +2,7 @@ use std::time::Duration;
 
 use crate::{board::Board, color::Color};
 
-use super::StrategyTrait;
-
+use super::Strategy;
 
 #[derive(Clone)]
 pub struct Human {
@@ -11,8 +10,7 @@ pub struct Human {
     name: String,
 }
 
-
-impl StrategyTrait for Human {
+impl Strategy for Human {
     #[allow(unused_variables)]
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
         Human::ask_coord(color, &board)

@@ -18,73 +18,50 @@ mod color;
 use color::Color;
 
 mod strategy;
-use strategy::Strategy;
 
 mod evaluation;
+#[allow(unused_imports)]
 use evaluation::evaluation1::Evaluation1;
+#[allow(unused_imports)]
+use strategy::alpha_beta::AlphaBeta;
+#[allow(unused_imports)]
+use strategy::alpha_beta_2::AlphaBeta2;
+#[allow(unused_imports)]
+use strategy::mini_max::MiniMax;
+#[allow(unused_imports)]
+use strategy::human::Human;
+#[allow(unused_imports)]
+use strategy::random::Random;
 
 fn main() {
-    
     let mut players: HashMap<Color, Player> = HashMap::new();
     
     let duration = Duration::from_millis(1000);
     
     players.insert(
         Color::White,
-        //Strategy::Random(strategy::random::Random::new()),
-        /*Strategy::MiniMax(strategy::mini_max::MiniMax::new(
-            Evaluation::Evaluation1(evaluation::evaluation1::Evaluation1::new()),
-            3,
-            None,
-        )),*/
         Player::new(
             "AlphaBeta".to_string(),
-            Strategy::AlphaBeta(strategy::alpha_beta::AlphaBeta::new(
+            Arc::new(AlphaBeta::new(
                 Arc::new(Evaluation1::new()),
                 10,
                 None,
             )),
             Some(duration),
         ),
-        /*
-        Player::new(
-            "AlphaBetaV2".to_string(),
-            Strategy::AlphaBeta(strategy::alpha_beta::AlphaBeta::new(
-                Box::new(Evaluation1::new()),
-                10,
-                None,
-            )),
-            Some(duration),
-        )*/
     );
-
+    
     players.insert(
         Color::Black,
-        //Strategy::Random(strategy::random::Random::new()),
-        /*Strategy::MiniMax(strategy::mini_max::MiniMax::new(
-            Evaluation::Evaluation1(evaluation::evaluation1::Evaluation1::new()),
-            3,
-            None,
-        )),*/
         Player::new(
-            "AlphaBetaV2".to_string(),
-            Strategy::AlphaBetaV2(strategy::alpha_beta_2::AlphaBeta2::new(
+            "AlphaBeta2".to_string(),
+            Arc::new(AlphaBeta2::new(
                 Arc::new(Evaluation1::new()),
                 10,
                 None,
             )),
             Some(duration),
         ),
-        /*
-        Player::new(
-            "AlphaBetaV2".to_string(),
-            Strategy::AlphaBeta(strategy::alpha_beta::AlphaBeta::new(
-                Evaluation::Evaluation1(evaluation::evaluation1::Evaluation1::new()),
-                10,
-                None,
-            )),
-            Some(duration),
-        )*/
     );    
     let mut hex = Game::new(9, players);
     hex.set_duration(duration);

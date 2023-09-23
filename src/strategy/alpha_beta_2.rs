@@ -2,7 +2,7 @@ use std::{time::Duration, sync::Arc};
 
 use crate::{board::Board, color::Color, evaluation::Evaluation};
 
-use super::StrategyTrait;
+use super::Strategy;
 
 
 #[derive(Clone)]
@@ -12,7 +12,7 @@ pub struct AlphaBeta2 {
     evaluation: Arc<dyn Evaluation>,
 }
 
-impl StrategyTrait for AlphaBeta2 {
+impl Strategy for AlphaBeta2 {
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
         // update duration if it's not None
         match duration {

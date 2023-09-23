@@ -3,14 +3,13 @@ use std::time::Duration;
 use crate::{board::Board, color::Color};
 use rand::Rng;
 
-use super::StrategyTrait;
+use super::Strategy;
 
 
 #[derive(Clone)]
 pub struct Random;
 
-impl StrategyTrait for Random {
-    
+impl Strategy for Random {
     #[allow(unused_variables)]
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
         let mut rng = rand::thread_rng();
