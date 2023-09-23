@@ -1,17 +1,16 @@
-use std::time::Duration;
+use std::{time::Duration, sync::Arc};
 
-use crate::{board::Board, evaluation::EvaluationTrait, color::Color};
+use crate::{board::Board, evaluation::Evaluation, color::Color};
 
 use super::StrategyTrait;
 
-use crate::evaluation::Evaluation;
 
 
 #[derive(Clone)]
 pub struct AlphaBeta {
     duration: Option<Duration>,
     max_depth: usize,
-    evaluation: Evaluation,
+    evaluation: Arc<dyn Evaluation>,
 }
 
 impl StrategyTrait for AlphaBeta {
@@ -35,7 +34,7 @@ impl StrategyTrait for AlphaBeta {
 }
 
 impl AlphaBeta {
-    pub fn new(evaluation: Evaluation, max_depth: usize, duration: Option<Duration>) -> AlphaBeta {
+    pub fn new(evaluation: Arc<dyn Evaluation>, max_depth: usize, duration: Option<Duration>) -> AlphaBeta {
         AlphaBeta {
             evaluation,
             max_depth,

@@ -5,7 +5,7 @@ use rand::Rng;
 use crate::cell::Cell;
 use crate::distance::Distance;
 use crate::color::Color;
-use crate::evaluation::{Evaluation, EvaluationTrait};
+use crate::evaluation::Evaluation;
 use crate::display::{write_column_labels, write_row};
 
 #[allow(dead_code)]
@@ -205,7 +205,7 @@ impl Board {
         self.set(x, y, color);
     }
 
-    pub fn sort_moves(&self, color: Color, moves: &mut Vec<(usize, usize)>, evaluation: &Evaluation) -> Vec<(usize, usize)> {
+    pub fn sort_moves(&self, color: Color, moves: &mut Vec<(usize, usize)>, evaluation: &dyn Evaluation) -> Vec<(usize, usize)> {
         let mut s_moves = moves.iter().map(|(x, y)| {
             let mut new_board = self.clone();
             new_board.set(*x, *y, color);
@@ -431,7 +431,7 @@ mod tests {
         println!("{}", board);
 
         let mut moves = board.possible_moves();
-        let evaluation = Evaluation::Evaluation1(Evaluation1::new());
+        let evaluation = Evaluation1::new();
         board.sort_moves(Color::White, &mut moves, &evaluation);
         println!("{:?}", moves);
 

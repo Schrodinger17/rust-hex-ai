@@ -1,17 +1,15 @@
-use std::time::Duration;
+use std::{time::Duration, sync::Arc};
 
-use crate::{board::Board, evaluation::EvaluationTrait, color::Color};
+use crate::{board::Board, evaluation::Evaluation, color::Color};
 
 use super::StrategyTrait;
-
-use crate::evaluation::Evaluation;
 
 
 #[derive(Clone)]
 pub struct MiniMax {
     duration: Option<Duration>,
     max_depth: usize,
-    evaluation: Evaluation,
+    evaluation: Arc<dyn Evaluation>,
 }
 
 impl StrategyTrait for MiniMax {
@@ -36,7 +34,7 @@ impl StrategyTrait for MiniMax {
 
 impl MiniMax {
     #[allow(dead_code)]
-    pub fn new(evaluation: Evaluation, max_depth: usize, duration: Option<Duration>) -> MiniMax {
+    pub fn new(evaluation: Arc<dyn Evaluation>, max_depth: usize, duration: Option<Duration>) -> MiniMax {
         MiniMax {
             evaluation,
             max_depth,

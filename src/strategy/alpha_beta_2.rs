@@ -1,17 +1,15 @@
-use std::time::Duration;
+use std::{time::Duration, sync::Arc};
 
-use crate::{board::Board, color::Color, evaluation::EvaluationTrait};
+use crate::{board::Board, color::Color, evaluation::Evaluation};
 
 use super::StrategyTrait;
-
-use crate::evaluation::Evaluation;
 
 
 #[derive(Clone)]
 pub struct AlphaBeta2 {
     duration: Option<Duration>,
     max_depth: usize,
-    evaluation: Evaluation,
+    evaluation: Arc<dyn Evaluation>,
 }
 
 impl StrategyTrait for AlphaBeta2 {
@@ -35,7 +33,7 @@ impl StrategyTrait for AlphaBeta2 {
 }
 
 impl AlphaBeta2 {
-    pub fn new(evaluation: Evaluation, max_depth: usize, duration: Option<Duration>) -> AlphaBeta2 {
+    pub fn new(evaluation: Arc<dyn Evaluation>, max_depth: usize, duration: Option<Duration>) -> AlphaBeta2 {
         AlphaBeta2 {
             evaluation,
             max_depth,
@@ -79,7 +77,7 @@ impl AlphaBeta2 {
         let mut possible_moves = board.possible_moves();
 
 
-        possible_moves = board.sort_moves(color, &mut possible_moves, &self.evaluation);
+        possible_moves = board.sort_moves(color, &mut possible_moves, self.evaluation.as_ref());
         // only keep maximum 10 moves
         let nb_max_moves = board.size() * board.size() / 5;
         if possible_moves.len() > nb_max_moves {

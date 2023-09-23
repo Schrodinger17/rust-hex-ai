@@ -1,11 +1,11 @@
-use super::EvaluationTrait;
+use super::Evaluation;
 use crate::{board::Board, color::Color};
 
 
 #[derive(Clone)]
 pub struct Evaluation1;
 
-impl EvaluationTrait for Evaluation1 {
+impl Evaluation for Evaluation1 {
     fn score(&self, board: &Board) -> f64 {
         board.missing_move_to_win(Color::Black) as f64 - board.missing_move_to_win(Color::White) as f64
     }

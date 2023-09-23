@@ -1,6 +1,7 @@
 mod player;
 use std::collections::HashMap;
 
+use std::sync::Arc;
 use std::time::Duration;
 use player::Player;
 
@@ -20,13 +21,13 @@ mod strategy;
 use strategy::Strategy;
 
 mod evaluation;
-use evaluation::Evaluation;
+use evaluation::evaluation1::Evaluation1;
 
 fn main() {
     
     let mut players: HashMap<Color, Player> = HashMap::new();
     
-    let duration = Duration::from_millis(5000);
+    let duration = Duration::from_millis(1000);
     
     players.insert(
         Color::White,
@@ -39,7 +40,7 @@ fn main() {
         Player::new(
             "AlphaBeta".to_string(),
             Strategy::AlphaBeta(strategy::alpha_beta::AlphaBeta::new(
-                Evaluation::Evaluation1(evaluation::evaluation1::Evaluation1::new()),
+                Arc::new(Evaluation1::new()),
                 10,
                 None,
             )),
@@ -49,7 +50,7 @@ fn main() {
         Player::new(
             "AlphaBetaV2".to_string(),
             Strategy::AlphaBeta(strategy::alpha_beta::AlphaBeta::new(
-                Evaluation::Evaluation1(evaluation::evaluation1::Evaluation1::new()),
+                Box::new(Evaluation1::new()),
                 10,
                 None,
             )),
@@ -68,7 +69,7 @@ fn main() {
         Player::new(
             "AlphaBetaV2".to_string(),
             Strategy::AlphaBetaV2(strategy::alpha_beta_2::AlphaBeta2::new(
-                Evaluation::Evaluation1(evaluation::evaluation1::Evaluation1::new()),
+                Arc::new(Evaluation1::new()),
                 10,
                 None,
             )),
