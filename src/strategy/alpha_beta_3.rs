@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
-use crate::{board::{Board, self}, color::Color, evaluation::Evaluation};
+use crate::{board::Board, color::Color, evaluation::Evaluation};
 
 use super::Strategy;
 

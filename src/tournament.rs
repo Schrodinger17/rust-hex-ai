@@ -10,6 +10,7 @@ pub struct Tournament {
     nb_games: usize,
 }
 
+#[allow(dead_code)]
 impl Tournament {
     pub fn new(players: Vec<Arc<Player>>, board_size: usize, nb_games: usize) -> Tournament {
         let mut games = Vec::new();

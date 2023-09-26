@@ -34,6 +34,7 @@ impl Strategy for AlphaBeta {
 }
 
 impl AlphaBeta {
+    #[allow(dead_code)]
     pub fn new(evaluation: Arc<dyn Evaluation>, max_depth: usize, duration: Option<Duration>) -> AlphaBeta {
         AlphaBeta {
             evaluation,

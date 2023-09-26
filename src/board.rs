@@ -6,7 +6,6 @@ use rand::Rng;
 use crate::cell::Cell;
 use crate::distance::Distance;
 use crate::color::Color;
-use crate::evaluation::Evaluation;
 use crate::display::{write_column_labels, write_row};
 
 #[allow(dead_code)]
@@ -273,8 +272,6 @@ impl Eq for Board {
 //test
 #[cfg(test)]
 mod tests {
-    use crate::evaluation::evaluation1::Evaluation1;
-
     use super::*;
 
     #[test]
