@@ -3,6 +3,7 @@ pub(crate) mod random;
 pub(crate) mod mini_max;
 pub(crate) mod alpha_beta;
 pub(crate) mod alpha_beta_2;
+pub(crate) mod alpha_beta_3;
 
 use crate::{board::Board, color::Color};
 

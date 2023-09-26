@@ -1,4 +1,5 @@
 use core::fmt;
+use std::hash::Hash;
 
 use rand::Rng;
 
@@ -9,7 +10,7 @@ use crate::evaluation::Evaluation;
 use crate::display::{write_column_labels, write_row};
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Board {
     pub board: Vec<Vec<Color>>,
     pub size: usize,
@@ -281,6 +282,17 @@ impl fmt::Display for Board {
 
         write_column_labels(f, self.size(), (self.size() + 1) as usize)
     }
+}
+
+impl Hash for Board {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.board.hash(state);
+        self.size.hash(state);
+    }
+}
+
+impl Eq for Board {
+    
 }
 
 //test

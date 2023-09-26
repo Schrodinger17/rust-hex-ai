@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use crate::color::Color;
@@ -6,7 +7,7 @@ use crate::{board::Board, player::Player};
 
 pub struct Game {
     pub board: Board,
-    pub players: HashMap<Color, Player>,
+    pub players: HashMap<Color, Arc<Player>>,
     pub turn: Color,
     duration: Option<Duration>,
     pub winner: Color,
@@ -14,7 +15,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(board_size: usize, players: HashMap<Color, Player>) -> Game {
+    pub fn new(board_size: usize, players: HashMap<Color, Arc<Player>>) -> Game {
         Game {
             board: Board::new(board_size),
             players: players,
