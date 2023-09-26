@@ -51,6 +51,43 @@ impl AlphaBeta2 {
         self.max_depth = max_depth;
     }
 
+    fn possible_moves_sorted(
+        &self,
+        board: &Board,
+        color: Color,
+    ) -> Vec<(usize, usize)> {
+        let mut s_moves = board
+            .possible_moves()
+            .iter()
+            .map(|(x, y)| {
+                let mut board = board.clone();
+                board.set(*x, *y, color);
+                let score = self.evaluation.score(&board);
+                //println!("{} {} {}", x+1, y+1, score);
+                ((*x, *y), score)
+            })
+            .collect::<Vec<((usize, usize), f64)>>();
+
+        s_moves.sort_by(|(_, score_a), (_, score_b)| score_a.partial_cmp(&score_b).unwrap());
+
+        if let Color::White = color {
+            s_moves.reverse();
+        }
+
+        s_moves
+            .iter()
+            .map(|((x, y), _)| (*x, *y))
+            .collect::<Vec<(usize, usize)>>()
+    }
+
+    fn keep_bests_moves(&self, board: &Board, possible_moves: Vec<(usize, usize)>) -> Vec<(usize, usize)>{
+        let nb_max_moves = board.size() * board.size() / 5;
+        if possible_moves.len() > nb_max_moves {
+            return possible_moves[0..nb_max_moves].to_vec();
+        }
+        possible_moves
+    }
+
     fn alpha_beta(&self, board: &Board, color: Color, depth: usize, duration: Option<Duration>) -> (usize, usize) {
         match self._alpha_beta(board, color, depth, f64::MIN, f64::MAX, duration) {
             (_, Some((x, y))) => (x, y),
@@ -74,15 +111,9 @@ impl AlphaBeta2 {
 
         let mut value: f64;
         let mut best_move = board.a_possible_move();
-        let mut possible_moves = board.possible_moves();
+        let mut possible_moves = self.possible_moves_sorted(board, color);
 
-
-        possible_moves = board.sort_moves(color, &mut possible_moves, self.evaluation.as_ref());
-        // only keep maximum 10 moves
-        let nb_max_moves = board.size() * board.size() / 5;
-        if possible_moves.len() > nb_max_moves {
-            possible_moves = possible_moves[0..nb_max_moves].to_vec();
-        }
+        possible_moves = self.keep_bests_moves(board, possible_moves);
 
         if color == Color::White {
             value = f64::MIN;

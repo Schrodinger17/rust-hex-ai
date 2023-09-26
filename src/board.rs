@@ -206,31 +206,6 @@ impl Board {
         self.set(x, y, color);
     }
 
-    pub fn sort_moves(&self, color: Color, moves: &mut Vec<(usize, usize)>, evaluation: &dyn Evaluation) -> Vec<(usize, usize)> {
-        let mut s_moves = moves.iter().map(|(x, y)| {
-            let mut new_board = self.clone();
-            new_board.set(*x, *y, color);
-            let score = evaluation.score(&new_board);
-            //println!("{} {} {}", x+1, y+1, score);
-            ((*x, *y), score)
-        })
-        .collect::<Vec<((usize, usize), f64)>>();
-        
-        s_moves.sort_by(
-            |(_, score_a), (_, score_b)| {
-                score_a.partial_cmp(&score_b).unwrap()
-            }
-        );
-
-        if let Color::White = color {
-            s_moves.reverse();
-        }
-        
-        s_moves.iter()
-        .map(|((x, y), _)| (*x, *y))
-        .collect::<Vec<(usize, usize)>>()
-    }
-
     pub fn is_win(&self, color: Color) -> bool {
         self.missing_move_to_win(color) == 0
     }
@@ -435,19 +410,6 @@ mod tests {
         assert_eq!(board.possible_moves(), vec![(0, 1), (1, 0), (1, 1)]);
     }
 
-    #[test]
-    fn sort_moves() {
-        let mut board = Board::new(3);
-        board.set(2, 0, Color::White);
-        board.set(2, 1, Color::White);
-        println!("{}", board);
-
-        let mut moves = board.possible_moves();
-        let evaluation = Evaluation1::new();
-        board.sort_moves(Color::White, &mut moves, &evaluation);
-        println!("{:?}", moves);
-
-    }
     #[test]
     fn spped_test() {
         #[allow(dead_code)]
