@@ -10,20 +10,22 @@ pub enum Score {
     WhiteCheckMate,
 }
 
-impl Score {
-    pub fn to_f64(&self) -> f64 {
-        let max: f64 = 1000.0;//f64::MAX;
-        let min: f64 = -1000.0;//f64::MIN;
 
+impl Score {
+    pub const MIN: f64 = -1000.0;//f64::MIN;
+    pub const MAX: f64 = 1000.0;//f64::MAX;
+    
+    pub fn to_f64(&self) -> f64 {
         match self {
             Score::Advantage(score) => *score,
-            Score::BlackMateIn(n) => min + *n as f64,
-            Score::WhiteMateIn(n) => max - *n as f64,
-            Score::BlackCheckMate => min,
-            Score::WhiteCheckMate => max,
+            Score::BlackMateIn(n) => Score::MIN + *n as f64,
+            Score::WhiteMateIn(n) => Score::MIN - *n as f64,
+            Score::BlackCheckMate => Score::MIN,
+            Score::WhiteCheckMate => Score::MAX,
         }
     }
 
+    #[allow(dead_code)]
     pub fn from_f64(score: f64) -> Score {
         let max: f64 = 1000.0;//f64::MAX;
         let min: f64 = -1000.0;//f64::MIN;

@@ -4,7 +4,6 @@ mod player;
 use std::collections::HashMap;
 
 use player::Player;
-use strategy::alpha_beta_3::AlphaBeta3;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -50,8 +49,8 @@ fn main() {
     players.insert(
         Color::White,
         Arc::new(Player::new(
-            "AlphaBeta2".to_string(),
-            Arc::new(AlphaBeta2::new(Arc::new(Evaluation1::new()), 20, None)),
+            "MiniMax".to_string(),
+            Arc::new(MiniMax::new(Arc::new(Evaluation1::new()), 20, None)),
             Some(duration),
         )),
     );
@@ -59,12 +58,13 @@ fn main() {
     players.insert(
         Color::Black,
         Arc::new(Player::new(
-            "AlphaBeta3".to_string(),
-            Arc::new(AlphaBeta3::new(Arc::new(Evaluation1::new()), 20, None)),
+            "AlphaBeta_2".to_string(),
+            Arc::new(AlphaBeta2::new(Arc::new(Evaluation1::new()), 20, None)),
             Some(duration),
         )),
     );
-    let mut hex = Game::new(7, players);
+
+    let mut hex = Game::new(3, players);
     hex.set_duration(duration);
     hex.play();
     

@@ -1,6 +1,6 @@
 use std::{time::Duration, sync::Arc};
 
-use crate::{board::Board, evaluation::Evaluation, color::Color};
+use crate::{board::Board, evaluation::Evaluation, color::Color, score::Score};
 
 use super::Strategy;
 
@@ -59,7 +59,7 @@ impl MiniMax {
         }
     }
 
-    fn _minimax(&self, board: &Board, color: Color, depth: usize, duration: Option<Duration>) -> (f64, Option<(usize, usize)>) {
+    fn _minimax(&self, board: &Board, color: Color, depth: usize, duration: Option<Duration>) -> (Score, Option<(usize, usize)>) {
         if board.is_win(color.opponent()) {
             return (color.opponent().win_score(), None);
         }
@@ -68,8 +68,10 @@ impl MiniMax {
             return (self.evaluation.score(board), None);
         }
 
-        let mut best_score: f64 = color.opponent().win_score();
+        let mut best_score = color.opponent().win_score();
         let mut best_move = board.a_possible_move();
+
+        let mut best_moves: Vec<(Score, (usize, usize))> = Vec::new();
 
         for (x, y) in board.possible_moves() {
             let mut new_board = board.clone();
@@ -87,19 +89,57 @@ impl MiniMax {
                 }
             }
 
+            best_moves.push((score, (x, y)));
+            
+
             if depth == self.max_depth {
                 //println!("{} {} {}", x+1, y+1, score); // TODO: remove this debug print
             }
         }
 
+        
         /*
+        let move_cmp = |a: &(Score, (usize, usize)), b: &(Score, (usize, usize))| {
+            if color == Color::White {
+                b.0.partial_cmp(&a.0).unwrap()
+            } else {
+                a.0.partial_cmp(&b.0).unwrap()
+            }
+        };
+
         if depth == self.max_depth {
+            println!("{}", board);
+            best_moves.sort_by( move_cmp );
+            println!("{:?}", best_moves);
             println!("Board score : {}", self.evaluation.score(board)); // TODO: remove this debug print
             println!("Deep score : {}", best_score); // TODO: remove this debug print
             println!("Best move : {:?}", (best_move.0 + 1, best_move.1 + 1)); // TODO: remove this debug print
-        }
-        */
+        }*/
         
-        (best_score, Some(best_move))
+        (best_score.previous(), Some(best_move))
+        
+    }
+}
+
+
+
+#[cfg(test)]
+mod tests {
+    use crate::evaluation::evaluation1::Evaluation1;
+
+    use super::*;
+
+    #[test]
+    fn test_mini_max() {
+        let minimax = MiniMax::new(Arc::new(Evaluation1::new()), 9, None);
+        let mut board = Board::new(4);
+        //board.set(0, 0, Color::White);
+        //board.set(1, 0, Color::White);
+        //board.set(1, 1, Color::White);
+        board.set(1, 1, Color::Black);
+
+        println!("{}", board);
+        let best_move = minimax.next_move(&board, Color::White, None);
+        println!("{:?}", best_move);
     }
 }

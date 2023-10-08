@@ -1,3 +1,5 @@
+use crate::score::Score;
+
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum Color {
     White,
@@ -30,11 +32,11 @@ impl Color {
         }
     }
 
-    pub fn win_score(&self) -> f64 {
+    pub fn win_score(&self) -> Score {
         match self {
-            Color::White => f64::MAX,
-            Color::Black => f64::MIN,
-            Color::None => 0.0,
+            Color::White => Score::WhiteCheckMate,
+            Color::Black => Score::BlackCheckMate,
+            _ => Score::Advantage(0.0),
         }
     }
 }

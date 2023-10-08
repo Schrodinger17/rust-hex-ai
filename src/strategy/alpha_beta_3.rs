@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
-use crate::{board::Board, color::Color, evaluation::Evaluation};
+use crate::{board::Board, color::Color, evaluation::Evaluation, score::Score};
 
 use super::Strategy;
 
@@ -82,7 +82,7 @@ impl AlphaBeta3 {
         }
     }
 
-    fn get_score(&self, board: &Board, score_dict: &mut HashMap<Board, f64>) -> f64 {
+    fn get_score(&self, board: &Board, score_dict: &mut HashMap<Board, Score>) -> Score {
         if score_dict.contains_key(&board) {
             return score_dict[&board];
         } else {
@@ -94,7 +94,7 @@ impl AlphaBeta3 {
         &self,
         board: &Board,
         color: Color,
-        score_dict: &mut HashMap<Board, f64>,
+        score_dict: &mut HashMap<Board, Score>,
     ) -> Vec<(usize, usize)> {
         let mut s_moves = board
             .possible_moves()
@@ -106,7 +106,7 @@ impl AlphaBeta3 {
                 //println!("{} {} {}", x+1, y+1, score);
                 ((*x, *y), score)
             })
-            .collect::<Vec<((usize, usize), f64)>>();
+            .collect::<Vec<((usize, usize), Score)>>();
 
         s_moves.sort_by(|(_, score_a), (_, score_b)| score_a.partial_cmp(&score_b).unwrap());
 
@@ -136,8 +136,8 @@ impl AlphaBeta3 {
         alpha: f64,
         beta: f64,
         duration: Option<Duration>,
-        score_dict: &mut HashMap<Board, f64>,
-    ) -> (f64, Option<(usize, usize)>) {
+        score_dict: &mut HashMap<Board, Score>,
+    ) -> (Score, Option<(usize, usize)>) {
         let mut alpha = alpha;
         let mut beta = beta;
 
@@ -180,8 +180,8 @@ impl AlphaBeta3 {
                     }
                 };
 
-                if score > value {
-                    value = score;
+                if score.to_f64() > value {
+                    value = score.to_f64();
                     score_dict.insert( new_board.clone(), score);
                     best_move = (x, y);
                 }
@@ -221,8 +221,8 @@ impl AlphaBeta3 {
                     }
                 };
 
-                if score < value {
-                    value = score;
+                if score.to_f64() < value {
+                    value = score.to_f64();
                     best_move = (x, y);
                 }
 
@@ -246,6 +246,6 @@ impl AlphaBeta3 {
             println!("Best move : {:?}", (best_move.0 + 1, best_move.1 + 1)); // TODO: remove this debug print
         }
 
-        (value, Some(best_move))
+        (Score::Advantage(value).previous(), Some(best_move))
     }
 }

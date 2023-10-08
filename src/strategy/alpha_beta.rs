@@ -1,6 +1,6 @@
 use std::{time::Duration, sync::Arc};
 
-use crate::{board::Board, evaluation::Evaluation, color::Color};
+use crate::{board::Board, evaluation::Evaluation, color::Color, score::Score};
 
 use super::Strategy;
 
@@ -54,15 +54,17 @@ impl AlphaBeta {
     }
 
     fn alpha_beta(&self, board: &Board, color: Color, depth: usize, duration: Option<Duration>) -> (usize, usize) {
-        match self._alpha_beta(board, color, depth, f64::MIN, f64::MAX, duration) {
+        match self._alpha_beta(board, color, depth, Score::BlackCheckMate, Score::WhiteCheckMate, duration) {
             (_, Some((x, y))) => (x, y),
             _ => panic!("Error in alpha_beta"),
         }
     }
 
-    fn _alpha_beta(&self, board: &Board, color: Color, depth: usize, alpha: f64, beta: f64, duration: Option<Duration>) -> (f64, Option<(usize, usize)>) {
+    fn _alpha_beta(&self, board: &Board, color: Color, depth: usize, alpha: Score, beta: Score, duration: Option<Duration>) -> (Score, Option<(usize, usize)>) {
         let mut alpha = alpha;
         let mut beta = beta;
+
+        let mut best_moves: Vec<(Score, (usize, usize))> = Vec::new();
         
         if board.is_win(color) {
             return (color.win_score(), None);
@@ -74,18 +76,20 @@ impl AlphaBeta {
             return (self.evaluation.score(board), None);
         }
 
-        let mut value: f64;
+        let mut value: Score;
         let mut best_move = board.a_possible_move();
         let possible_moves = board.possible_moves();
 
         if color == Color::White {
-            value = f64::MIN;
+            value = Score::BlackCheckMate;
             for (x, y) in possible_moves {
                 let mut new_board = board.clone();
                 new_board.set(x, y, color);
                 
                 let (score, _) = self._alpha_beta(&new_board, color.opponent(), depth - 1, alpha, beta, duration);
                 
+                best_moves.push((score, (x, y)));
+
                 if score > value {
                     value = score;
                     best_move = (x, y);
@@ -104,11 +108,14 @@ impl AlphaBeta {
                 }
             }
         } else {
-            value = f64::MAX;
+            value = Score::WhiteCheckMate;
             for (x, y) in possible_moves {
                 let mut new_board = board.clone();
                 new_board.set(x, y, color);
                 let (score, _) = self._alpha_beta(&new_board, color.opponent(), depth - 1,  alpha, beta, duration);
+                
+                best_moves.push((score, (x, y)));
+
                 if score < value {
                     value = score;
                     best_move = (x, y);
@@ -127,13 +134,46 @@ impl AlphaBeta {
                 }
             }
         }
-        /*
+        
+        
+        let move_cmp = |a: &(Score, (usize, usize)), b: &(Score, (usize, usize))| {
+            if color == Color::White {
+                b.0.partial_cmp(&a.0).unwrap()
+            } else {
+                a.0.partial_cmp(&b.0).unwrap()
+            }
+        };
+
         if depth == self.max_depth {
+            println!("{}", board);
+            best_moves.sort_by( move_cmp );
+            println!("{:?}", best_moves);
             println!("Board score : {}", self.evaluation.score(board)); // TODO: remove this debug print
             println!("Deep score : {}", value); // TODO: remove this debug print
             println!("Best move : {:?}", (best_move.0 + 1, best_move.1 + 1)); // TODO: remove this debug print
-        }*/
+        }
 
-        (value, Some(best_move))
+        (value.previous(), Some(best_move))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::evaluation::evaluation1::Evaluation1;
+
+    use super::*;
+
+    #[test]
+    fn test_mini_max() {
+        let minimax = AlphaBeta::new(Arc::new(Evaluation1::new()), 7, None);
+        let mut board = Board::new(4);
+        //board.set(0, 0, Color::White);
+        //board.set(1, 0, Color::White);
+        //board.set(1, 1, Color::White);
+        board.set(1, 1, Color::Black);
+
+        println!("{}", board);
+        let best_move = minimax.next_move(&board, Color::White, None);
+        println!("{:?}", best_move);
     }
 }
