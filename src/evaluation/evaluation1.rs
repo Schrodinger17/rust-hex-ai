@@ -1,7 +1,6 @@
 use super::Evaluation;
 use crate::{board::Board, color::Color, score::Score};
 
-
 #[derive(Clone)]
 pub struct Evaluation1;
 
@@ -27,7 +26,6 @@ impl Evaluation1 {
     }
 }
 
-
 //test
 #[cfg(test)]
 
@@ -50,13 +48,12 @@ mod tests {
         board.set(0, 0, Color::White);
         assert_eq!(evaluation.score(&board), Score::Advantage(1.0));
 
-        
         let mut board = Board::new(3);
         board.set(0, 0, Color::Black);
         board.set(1, 0, Color::Black);
         board.set(2, 0, Color::Black);
         assert_eq!(evaluation.score(&board), Score::BlackCheckMate);
-        
+
         let mut board = Board::new(3);
         board.set(0, 0, Color::White);
         board.set(0, 1, Color::White);

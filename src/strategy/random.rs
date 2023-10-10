@@ -5,7 +5,6 @@ use rand::Rng;
 
 use super::Strategy;
 
-
 #[derive(Clone)]
 pub struct Random;
 
@@ -27,5 +26,5 @@ impl Random {
     #[allow(dead_code)]
     pub fn new() -> Random {
         Random {}
-    } 
+    }
 }

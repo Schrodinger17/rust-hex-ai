@@ -35,17 +35,24 @@ impl Cell {
     }
 
     pub fn neighbors(&self, board_size: usize) -> Vec<Cell> {
-        let steps = vec![Cell::new(-1, 0), Cell::new(-1, 1), Cell::new(0, -1), Cell::new(0, 1), Cell::new(1, -1), Cell::new(1, 0)];
+        let steps = vec![
+            Cell::new(-1, 0),
+            Cell::new(-1, 1),
+            Cell::new(0, -1),
+            Cell::new(0, 1),
+            Cell::new(1, -1),
+            Cell::new(1, 0),
+        ];
 
-        steps.iter()
+        steps
+            .iter()
             .map(|step| *step + *self)
             .filter(|new_cell| new_cell.is_on_board(board_size))
             .collect()
     }
 }
 
-
-//test 
+//test
 #[cfg(test)]
 mod tests {
     use super::*;

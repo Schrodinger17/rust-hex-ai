@@ -1,9 +1,8 @@
-use std::{time::Duration, sync::Arc};
+use std::{sync::Arc, time::Duration};
 
-use crate::{board::Board, evaluation::Evaluation, color::Color, score::Score};
+use crate::{board::Board, color::Color, evaluation::Evaluation, score::Score};
 
 use super::Strategy;
-
 
 #[derive(Clone)]
 pub struct MiniMax {
@@ -16,25 +15,33 @@ impl Strategy for MiniMax {
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
         // update duration if it's not None
         match duration {
-            None => self.minimax(&board, color, self.max_depth,  self.duration),
+            None => self.minimax(&board, color, self.max_depth, self.duration),
             Some(duration) => {
                 let time = std::time::Instant::now();
                 let mut depth = 1;
-                let mut best_move = self.minimax(&board, color, depth,  self.duration);
+                let mut best_move = self.minimax(&board, color, depth, self.duration);
                 while time.elapsed() < duration && depth < self.max_depth {
                     depth += 1;
-                    best_move = self.minimax(&board, color, depth,  self.duration);
+                    best_move = self.minimax(&board, color, depth, self.duration);
                 }
-                println!("Depth: {} in {:?}", depth, Duration::from_millis(time.elapsed().as_millis() as u64));
+                println!(
+                    "Depth: {} in {:?}",
+                    depth,
+                    Duration::from_millis(time.elapsed().as_millis() as u64)
+                );
                 return best_move;
-            },
+            }
         }
     }
 }
 
 impl MiniMax {
     #[allow(dead_code)]
-    pub fn new(evaluation: Arc<dyn Evaluation>, max_depth: usize, duration: Option<Duration>) -> MiniMax {
+    pub fn new(
+        evaluation: Arc<dyn Evaluation>,
+        max_depth: usize,
+        duration: Option<Duration>,
+    ) -> MiniMax {
         MiniMax {
             evaluation,
             max_depth,
@@ -52,14 +59,26 @@ impl MiniMax {
         self.max_depth = max_depth;
     }
 
-    fn minimax(&self, board: &Board, color: Color, depth: usize, duration: Option<Duration>) -> (usize, usize) {
+    fn minimax(
+        &self,
+        board: &Board,
+        color: Color,
+        depth: usize,
+        duration: Option<Duration>,
+    ) -> (usize, usize) {
         match self._minimax(board, color, depth, duration) {
             (_, Some((x, y))) => (x, y),
             _ => panic!("Error in minimax"),
         }
     }
 
-    fn _minimax(&self, board: &Board, color: Color, depth: usize, duration: Option<Duration>) -> (Score, Option<(usize, usize)>) {
+    fn _minimax(
+        &self,
+        board: &Board,
+        color: Color,
+        depth: usize,
+        duration: Option<Duration>,
+    ) -> (Score, Option<(usize, usize)>) {
         if board.is_win(color.opponent()) {
             return (color.opponent().win_score(), None);
         }
@@ -90,14 +109,12 @@ impl MiniMax {
             }
 
             best_moves.push((score, (x, y)));
-            
 
             if depth == self.max_depth {
                 //println!("{} {} {}", x+1, y+1, score); // TODO: remove this debug print
             }
         }
 
-        
         /*
         let move_cmp = |a: &(Score, (usize, usize)), b: &(Score, (usize, usize))| {
             if color == Color::White {
@@ -115,13 +132,10 @@ impl MiniMax {
             println!("Deep score : {}", best_score); // TODO: remove this debug print
             println!("Best move : {:?}", (best_move.0 + 1, best_move.1 + 1)); // TODO: remove this debug print
         }*/
-        
+
         (best_score.previous(), Some(best_move))
-        
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {

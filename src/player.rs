@@ -1,6 +1,6 @@
-use std::{time::Duration, sync::Arc};
+use std::{sync::Arc, time::Duration};
 
-use crate::{strategy::Strategy, board::Board, color::Color};
+use crate::{board::Board, color::Color, strategy::Strategy};
 
 pub struct Player {
     pub name: String,
@@ -9,7 +9,11 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(name: String, strategy: Arc<dyn Strategy>, time_by_move: Option<Duration>) -> Player {
+    pub fn new(
+        name: String,
+        strategy: Arc<dyn Strategy>,
+        time_by_move: Option<Duration>,
+    ) -> Player {
         Player {
             name,
             strategy,

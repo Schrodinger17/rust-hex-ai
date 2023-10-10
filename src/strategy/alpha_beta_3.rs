@@ -120,7 +120,11 @@ impl AlphaBeta3 {
             .collect::<Vec<(usize, usize)>>()
     }
 
-    fn keep_bests_moves(&self, board: &Board, possible_moves: Vec<(usize, usize)>) -> Vec<(usize, usize)>{
+    fn keep_bests_moves(
+        &self,
+        board: &Board,
+        possible_moves: Vec<(usize, usize)>,
+    ) -> Vec<(usize, usize)> {
         let nb_max_moves = board.size() * board.size() / 5;
         if possible_moves.len() > nb_max_moves {
             return possible_moves[0..nb_max_moves].to_vec();
@@ -164,9 +168,7 @@ impl AlphaBeta3 {
                 new_board.set(x, y, color);
 
                 let score = match score_dict.get(&new_board) {
-                    Some(score) => {
-                        score.clone()
-                    }
+                    Some(score) => score.clone(),
                     None => {
                         self._alpha_beta(
                             &new_board,
@@ -176,13 +178,14 @@ impl AlphaBeta3 {
                             beta,
                             duration,
                             score_dict,
-                        ).0
+                        )
+                        .0
                     }
                 };
 
                 if score.to_f64() > value {
                     value = score.to_f64();
-                    score_dict.insert( new_board.clone(), score);
+                    score_dict.insert(new_board.clone(), score);
                     best_move = (x, y);
                 }
 
@@ -195,7 +198,7 @@ impl AlphaBeta3 {
                 }
 
                 if depth == self.max_depth {
-                    println!("{} {} {} {}", x+1, y+1, score, depth); // TODO: remove this debug print
+                    println!("{} {} {} {}", x + 1, y + 1, score, depth); // TODO: remove this debug print
                 }
             }
         } else {
@@ -205,9 +208,7 @@ impl AlphaBeta3 {
                 new_board.set(x, y, color);
 
                 let score = match score_dict.get(&new_board) {
-                    Some(score) => {
-                        score.clone()
-                    }
+                    Some(score) => score.clone(),
                     None => {
                         self._alpha_beta(
                             &new_board,
@@ -217,7 +218,8 @@ impl AlphaBeta3 {
                             beta,
                             duration,
                             score_dict,
-                        ).0
+                        )
+                        .0
                     }
                 };
 
@@ -235,11 +237,11 @@ impl AlphaBeta3 {
                 }
 
                 if depth == self.max_depth {
-                    println!("{} {} {} {}", x+1, y+1, score, depth); // TODO: remove this debug print
+                    println!("{} {} {} {}", x + 1, y + 1, score, depth); // TODO: remove this debug print
                 }
             }
         }
-        
+
         if depth == self.max_depth {
             println!("Board score : {}", self.evaluation.score(board)); // TODO: remove this debug print
             println!("Deep score : {}", value); // TODO: remove this debug print

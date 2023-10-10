@@ -4,9 +4,9 @@ use std::hash::Hash;
 use rand::Rng;
 
 use crate::cell::Cell;
-use crate::distance::Distance;
 use crate::color::Color;
 use crate::display::{write_column_labels, write_row};
+use crate::distance::Distance;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
@@ -196,7 +196,7 @@ impl Board {
             _ => panic!("Player::None has no missing move to win"),
         }
     }
-    
+
     pub fn play_random_move(&mut self, color: Color) {
         let possible_moves = self.possible_moves();
         let mut rng = rand::thread_rng();
@@ -265,9 +265,7 @@ impl Hash for Board {
     }
 }
 
-impl Eq for Board {
-    
-}
+impl Eq for Board {}
 
 //test
 #[cfg(test)]
@@ -396,7 +394,6 @@ mod tests {
         let duration = start.elapsed();
         println!("Time elapsed in expensive_function() is: {:?}", duration);
     }
-
 
     #[test]
     fn possible_moves() {

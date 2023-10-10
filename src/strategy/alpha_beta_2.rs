@@ -1,9 +1,8 @@
-use std::{time::Duration, sync::Arc};
+use std::{sync::Arc, time::Duration};
 
 use crate::{board::Board, color::Color, evaluation::Evaluation, score::Score};
 
 use super::Strategy;
-
 
 #[derive(Clone)]
 pub struct AlphaBeta2 {
@@ -16,25 +15,33 @@ impl Strategy for AlphaBeta2 {
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
         // update duration if it's not None
         match duration {
-            None => self.alpha_beta(&board, color, self.max_depth,  self.duration),
+            None => self.alpha_beta(&board, color, self.max_depth, self.duration),
             Some(duration) => {
                 let time = std::time::Instant::now();
                 let mut depth = 1;
-                let mut best_move = self.alpha_beta(&board, color, depth,  self.duration);
+                let mut best_move = self.alpha_beta(&board, color, depth, self.duration);
                 while time.elapsed() < duration && depth < self.max_depth {
                     depth += 1;
-                    best_move = self.alpha_beta(&board, color, depth,  self.duration);
+                    best_move = self.alpha_beta(&board, color, depth, self.duration);
                 }
-                println!("Depth: {} in {:?}", depth, Duration::from_millis(time.elapsed().as_millis() as u64));
+                println!(
+                    "Depth: {} in {:?}",
+                    depth,
+                    Duration::from_millis(time.elapsed().as_millis() as u64)
+                );
                 return best_move;
-            },
+            }
         }
     }
 }
 
 impl AlphaBeta2 {
     #[allow(dead_code)]
-    pub fn new(evaluation: Arc<dyn Evaluation>, max_depth: usize, duration: Option<Duration>) -> AlphaBeta2 {
+    pub fn new(
+        evaluation: Arc<dyn Evaluation>,
+        max_depth: usize,
+        duration: Option<Duration>,
+    ) -> AlphaBeta2 {
         AlphaBeta2 {
             evaluation,
             max_depth,
@@ -52,11 +59,7 @@ impl AlphaBeta2 {
         self.max_depth = max_depth;
     }
 
-    fn possible_moves_sorted(
-        &self,
-        board: &Board,
-        color: Color,
-    ) -> Vec<(usize, usize)> {
+    fn possible_moves_sorted(&self, board: &Board, color: Color) -> Vec<(usize, usize)> {
         let mut s_moves = board
             .possible_moves()
             .iter()
@@ -81,7 +84,11 @@ impl AlphaBeta2 {
             .collect::<Vec<(usize, usize)>>()
     }
 
-    fn keep_bests_moves(&self, board: &Board, possible_moves: Vec<(usize, usize)>) -> Vec<(usize, usize)>{
+    fn keep_bests_moves(
+        &self,
+        board: &Board,
+        possible_moves: Vec<(usize, usize)>,
+    ) -> Vec<(usize, usize)> {
         let nb_max_moves = board.size() * board.size() / 5;
         if possible_moves.len() > nb_max_moves {
             return possible_moves[0..nb_max_moves].to_vec();
@@ -89,17 +96,38 @@ impl AlphaBeta2 {
         possible_moves
     }
 
-    fn alpha_beta(&self, board: &Board, color: Color, depth: usize, duration: Option<Duration>) -> (usize, usize) {
-        match self._alpha_beta(board, color, depth, Score::BlackCheckMate, Score::WhiteCheckMate, duration) {
+    fn alpha_beta(
+        &self,
+        board: &Board,
+        color: Color,
+        depth: usize,
+        duration: Option<Duration>,
+    ) -> (usize, usize) {
+        match self._alpha_beta(
+            board,
+            color,
+            depth,
+            Score::BlackCheckMate,
+            Score::WhiteCheckMate,
+            duration,
+        ) {
             (_, Some((x, y))) => (x, y),
             _ => panic!("Error in alpha_beta"),
         }
     }
 
-    fn _alpha_beta(&self, board: &Board, color: Color, depth: usize, alpha: Score, beta: Score, duration: Option<Duration>) -> (Score, Option<(usize, usize)>) {
+    fn _alpha_beta(
+        &self,
+        board: &Board,
+        color: Color,
+        depth: usize,
+        alpha: Score,
+        beta: Score,
+        duration: Option<Duration>,
+    ) -> (Score, Option<(usize, usize)>) {
         let mut alpha = alpha;
         let mut beta = beta;
-        
+
         if board.is_win(color) {
             return (color.win_score(), None);
         } else if board.is_win(color.opponent()) {
@@ -121,9 +149,16 @@ impl AlphaBeta2 {
             for (x, y) in possible_moves {
                 let mut new_board = board.clone();
                 new_board.set(x, y, color);
-                
-                let (score, _) = self._alpha_beta(&new_board, color.opponent(), depth - 1, alpha, beta, duration);
-                
+
+                let (score, _) = self._alpha_beta(
+                    &new_board,
+                    color.opponent(),
+                    depth - 1,
+                    alpha,
+                    beta,
+                    duration,
+                );
+
                 if score > value {
                     value = score;
                     best_move = (x, y);
@@ -132,7 +167,7 @@ impl AlphaBeta2 {
                 if value > alpha {
                     alpha = value;
                 }
-                
+
                 if value >= beta {
                     break;
                 }
@@ -146,12 +181,19 @@ impl AlphaBeta2 {
             for (x, y) in possible_moves {
                 let mut new_board = board.clone();
                 new_board.set(x, y, color);
-                let (score, _) = self._alpha_beta(&new_board, color.opponent(), depth - 1,  alpha, beta, duration);
+                let (score, _) = self._alpha_beta(
+                    &new_board,
+                    color.opponent(),
+                    depth - 1,
+                    alpha,
+                    beta,
+                    duration,
+                );
                 if score < value {
                     value = score;
                     best_move = (x, y);
                 }
-                
+
                 if value < beta {
                     beta = value;
                 }
@@ -165,7 +207,7 @@ impl AlphaBeta2 {
                 }
             }
         }
-        
+
         if depth == self.max_depth {
             println!("Board score : {}", self.evaluation.score(board)); // TODO: remove this debug print
             println!("Deep score : {}", value); // TODO: remove this debug print

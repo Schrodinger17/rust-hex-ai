@@ -2,9 +2,13 @@ use core::fmt;
 
 use crate::board::Board;
 
-pub fn write_column_labels(f: &mut fmt::Formatter, board_size: usize, indent: usize) -> fmt::Result {
+pub fn write_column_labels(
+    f: &mut fmt::Formatter,
+    board_size: usize,
+    indent: usize,
+) -> fmt::Result {
     write_indent(f, indent)?;
-    write!(f," ")?;
+    write!(f, " ")?;
 
     for column in 0..board_size {
         write!(f, " {} ", column + 1)?;

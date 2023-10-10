@@ -75,7 +75,13 @@ impl Game {
             self.board.set(x, y, self.turn);
 
             if self.display {
-                println!("{} played ({}, {}) in {:?}", self.turn.to_string(), x + 1, y + 1, duration);
+                println!(
+                    "{} played ({}, {}) in {:?}",
+                    self.turn.to_string(),
+                    x + 1,
+                    y + 1,
+                    duration
+                );
                 println!("{}", self.board);
             }
 
@@ -85,7 +91,6 @@ impl Game {
                     println!("{} wins!", self.winner.to_string());
                 }
                 break;
-                
             }
 
             self.turn = self.turn.opponent();

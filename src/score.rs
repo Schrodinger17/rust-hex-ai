@@ -10,11 +10,10 @@ pub enum Score {
     WhiteCheckMate,
 }
 
-
 impl Score {
-    pub const MIN: f64 = -1000.0;//f64::MIN;
-    pub const MAX: f64 = 1000.0;//f64::MAX;
-    
+    pub const MIN: f64 = -1000.0; //f64::MIN;
+    pub const MAX: f64 = 1000.0; //f64::MAX;
+
     pub fn to_f64(&self) -> f64 {
         match self {
             Score::Advantage(score) => *score,
@@ -27,11 +26,11 @@ impl Score {
 
     #[allow(dead_code)]
     pub fn from_f64(score: f64) -> Score {
-        let max: f64 = 1000.0;//f64::MAX;
-        let min: f64 = -1000.0;//f64::MIN;
+        let max: f64 = 1000.0; //f64::MAX;
+        let min: f64 = -1000.0; //f64::MIN;
         let treshold: f64 = 50.0;
 
-        match score{
+        match score {
             score if score >= max => Score::WhiteCheckMate,
             score if score <= min => Score::BlackCheckMate,
             score if score > max - treshold => Score::WhiteMateIn((max - score) as usize),
@@ -83,8 +82,10 @@ impl Add for Score {
 
     fn add(self, other: Score) -> Score {
         match (self, other) {
-            (Score::Advantage(score1), Score::Advantage(score2)) => Score::Advantage(score1 + score2),
-            
+            (Score::Advantage(score1), Score::Advantage(score2)) => {
+                Score::Advantage(score1 + score2)
+            }
+
             (Score::WhiteCheckMate, _) => Score::WhiteCheckMate,
             (_, Score::WhiteCheckMate) => Score::WhiteCheckMate,
             (Score::BlackCheckMate, _) => Score::BlackCheckMate,
@@ -98,8 +99,7 @@ impl Add for Score {
     }
 }
 
-
-//test 
+//test
 #[cfg(test)]
 mod tests {
     use super::*;

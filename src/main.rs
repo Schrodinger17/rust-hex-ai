@@ -19,8 +19,8 @@ mod tournament;
 #[allow(unused_imports)]
 use tournament::Tournament;
 
-mod score;
 mod color;
+mod score;
 #[allow(unused_imports)]
 use color::Color;
 
@@ -40,11 +40,12 @@ use strategy::mini_max::MiniMax;
 #[allow(unused_imports)]
 use strategy::random::Random;
 
+mod best_list;
 mod test;
 
 fn main() {
     let duration = Duration::from_millis(1000);
-    
+
     let mut players: HashMap<Color, Arc<Player>> = HashMap::new();
     players.insert(
         Color::White,
@@ -67,10 +68,10 @@ fn main() {
     let mut hex = Game::new(3, players);
     hex.set_duration(duration);
     hex.play();
-    
+
     /*
     let mut strategies = Vec::new();
-    
+
     strategies.push(Arc::new(Player::new(
         "Random".to_string(),
         Arc::new(Random::new()),
@@ -112,12 +113,12 @@ W\B  0  1  2  3  4
  4 :10 10 10 10 10
  */
 
- /*
+/*
  Game 90/90 finished.
 Tournament results:
 3 players, 10 games.
 W\B  0  1  2
- 0 : 5  0  0 
+ 0 : 5  0  0
  1 :10  6  5
  2 :10  9  9
   */
