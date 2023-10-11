@@ -52,10 +52,12 @@ impl<T: PartialOrd + Clone> BestList<T> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn sort(&mut self) {
         self.list.sort_by(|a, b| b.partial_cmp(a).unwrap());
     }
 
+    #[allow(dead_code)]
     pub fn reversed_sort(&mut self) {
         self.list.sort_by(|a, b| a.partial_cmp(b).unwrap());
     }
@@ -63,6 +65,8 @@ impl<T: PartialOrd + Clone> BestList<T> {
 
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use super::*;
 
     #[test]
@@ -78,5 +82,43 @@ mod tests {
 
         assert_eq!(list_max.get(), vec![10, 9, 8]);
         assert_eq!(list_min.get(), vec![4, 2, 5]);
+    }
+
+
+    #[test]
+    fn time_comparison() {
+        let size = 100000;
+        let bests = 10;
+
+        let mut list = vec![0; size];
+        // fill with random values
+        for i in 0..size {
+            list[i] = rand::random::<i32>()%100000;
+        }
+
+
+        // Best list
+        let start = std::time::Instant::now();
+        let mut best_list: BestList<i32> = BestList::new(bests);
+
+        for e in list.iter() {
+            best_list.add_max(*e);
+        }
+        best_list.sort();
+        let duration = start.elapsed();
+        println!("BestList add_max: {:?}", duration);
+        println!("BestList: {:?}", best_list.get());
+
+
+        // Sort
+        let start = std::time::Instant::now();
+
+        list.sort_by(|a, b| b.partial_cmp(a).unwrap());
+
+        let best_list = list[0..bests].to_vec();
+
+        let duration = start.elapsed();
+        println!("Sort: {:?}", duration);
+        println!("BestList: {:?}", best_list);
     }
 }
