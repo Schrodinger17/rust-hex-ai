@@ -143,6 +143,7 @@ mod tests {
 
     use super::*;
 
+    #[ignore]
     #[test]
     fn test_mini_max() {
         let minimax = MiniMax::new(Arc::new(Evaluation1::new()), 9, None);

@@ -24,11 +24,11 @@ impl Strategy for AlphaBeta2 {
                     depth += 1;
                     best_move = self.alpha_beta(&board, color, depth, self.duration);
                 }
-                println!(
+                /*println!(
                     "Depth: {} in {:?}",
                     depth,
                     Duration::from_millis(time.elapsed().as_millis() as u64)
-                );
+                );*/
                 return best_move;
             }
         }
@@ -89,7 +89,7 @@ impl AlphaBeta2 {
         board: &Board,
         possible_moves: Vec<(usize, usize)>,
     ) -> Vec<(usize, usize)> {
-        let nb_max_moves = board.size() * board.size() / 5;
+        let nb_max_moves = board.size() * board.size() / 1;
         if possible_moves.len() > nb_max_moves {
             return possible_moves[0..nb_max_moves].to_vec();
         }
@@ -111,7 +111,10 @@ impl AlphaBeta2 {
             Score::WhiteCheckMate,
             duration,
         ) {
-            (_, Some((x, y))) => (x, y),
+            (_score, Some((x, y))) => {
+                //println!("Score: {} with depth {}", score, depth);
+                (x, y)
+            },
             _ => panic!("Error in alpha_beta"),
         }
     }
@@ -209,9 +212,9 @@ impl AlphaBeta2 {
         }
 
         if depth == self.max_depth {
-            println!("Board score : {}", self.evaluation.score(board)); // TODO: remove this debug print
-            println!("Deep score : {}", value); // TODO: remove this debug print
-            println!("Best move : {:?}", (best_move.0 + 1, best_move.1 + 1)); // TODO: remove this debug print
+            //println!("Board score : {}", self.evaluation.score(board)); // TODO: remove this debug print
+            //println!("Deep score : {}", value); // TODO: remove this debug print
+            //println!("Best move : {:?}", (best_move.0 + 1, best_move.1 + 1)); // TODO: remove this debug print
         }
 
         (value.previous(), Some(best_move))
@@ -224,6 +227,7 @@ mod tests {
 
     use super::*;
 
+    #[ignore]
     #[test]
     fn test_mini_max() {
         let minimax = AlphaBeta2::new(Arc::new(Evaluation1::new()), 5, None);

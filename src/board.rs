@@ -13,7 +13,6 @@ use crate::distance::Distance;
 pub struct Board {
     pub board: Vec<Vec<Color>>,
     pub size: usize,
-    pub score: f64,
 }
 
 impl Board {
@@ -21,7 +20,6 @@ impl Board {
         Board {
             board: vec![vec![Color::None; size]; size],
             size: size,
-            score: 0.0,
         }
     }
 
@@ -199,14 +197,43 @@ impl Board {
 
     pub fn play_random_move(&mut self, color: Color) {
         let possible_moves = self.possible_moves();
+
+        if possible_moves.len() == 0 {
+            return
+        }
+
         let mut rng = rand::thread_rng();
         let index = rng.gen_range(0..possible_moves.len());
         let (x, y) = possible_moves[index];
         self.set(x, y, color);
     }
 
+    #[allow(dead_code)]
+    pub fn random_board(size: usize, nb_moves: usize) -> Board {
+        let mut board = Board::new(size);
+        let mut color = Color::Black;
+
+        for _ in 0..nb_moves {
+            board.play_random_move(color);
+            color = color.opponent();
+        }
+
+        board
+    }
+
     pub fn is_win(&self, color: Color) -> bool {
         self.missing_move_to_win(color) == 0
+    }
+
+    #[allow(dead_code)]
+    pub fn winner(&self) -> Option<Color> {
+        if self.is_win(Color::Black) {
+            Some(Color::Black)
+        } else if self.is_win(Color::White) {
+            Some(Color::White)
+        } else {
+            None
+        }
     }
 
     pub fn is_full(&self) -> bool {
@@ -243,6 +270,11 @@ impl Board {
             }
         }
         panic!("No possible move")
+    }
+
+    #[allow(dead_code)]
+    pub fn is_finished(&self) -> bool {
+        self.is_win(Color::Black) || self.is_win(Color::White) || self.is_full()
     }
 }
 
@@ -405,81 +437,20 @@ mod tests {
     }
 
     #[test]
-    fn spped_test() {
-        #[allow(dead_code)]
-        #[derive(Debug)]
-        struct Student {
-            name: String,
-            gpa: f32,
+    fn random_board_path() {
+        let start = std::time::Instant::now();
+        for _ in 0..10000 {
+            let board = Board::random_board(3, 10);
+            
+            // println!("{}", board);
+            let _possible_winner = board.winner();
+            /*match _possible_winner {
+                Some(winner) => println!("Player {} wins !", winner),
+                None => println!("No winner"),
+            }*/
         }
-        {
-            let students = vec![
-                "Bogdan 3.1",
-                "Wallace 2.3",
-                "Lidiya 3.5",
-                "Kyle 3.9",
-                "Anatoliy 4.0",
-            ];
 
-            let start = std::time::Instant::now();
-
-            for _ in 0..1000 {
-                #[allow(unused_variables)]
-                let good_students: Vec<Student> = students
-                    .iter()
-                    .map(|s| {
-                        let mut s = s.split(' ');
-                        let name = s.next()?.to_owned();
-                        let gpa = s.next()?.parse::<f32>().ok()?;
-
-                        Some(Student { name, gpa })
-                    })
-                    .flatten()
-                    .filter(|s| s.gpa >= 3.5)
-                    .collect();
-            }
-
-            let duration = start.elapsed();
-            println!("Time elapsed in expensive_function() is: {:?}", duration);
-        }
-        // ----------------------------------
-        {
-            let students = vec![
-                "Bogdan 3.1",
-                "Wallace 2.3",
-                "Lidiya 3.5",
-                "Kyle 3.9",
-                "Anatoliy 4.0",
-            ];
-
-            let start = std::time::Instant::now();
-
-            for _ in 0..1000 {
-                let mut good_students = vec![];
-
-                for s in &students {
-                    let mut s = s.split(' ');
-                    let name = s.next();
-                    let gpa = s.next();
-
-                    if name.is_some() && gpa.is_some() {
-                        let name = name.unwrap().to_owned();
-                        let gpa = gpa.unwrap().to_owned();
-
-                        let gpa = gpa.parse::<f32>();
-
-                        if gpa.is_ok() {
-                            let gpa = gpa.unwrap();
-                            if gpa >= 3.5 {
-                                good_students.push(Student { name, gpa });
-                            }
-                        }
-                    }
-                }
-            }
-
-            let duration = start.elapsed();
-            println!("Time elapsed in expensive_function() is: {:?}", duration);
-        }
+        let duration = start.elapsed();
+        println!("Time elapsed in expensive_function() is: {:?}", duration);
     }
 }

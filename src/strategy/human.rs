@@ -19,9 +19,10 @@ impl Strategy for Human {
 
 impl Human {
     #[allow(dead_code)]
-    fn new(name: String) -> Human {
+    pub fn new(name: String) -> Human {
         Human { name }
     }
+
     fn read_coord(input: &str) -> Option<(usize, usize)> {
         let parts: Vec<&str> = input.split_whitespace().collect();
 
@@ -42,8 +43,8 @@ impl Human {
             .expect("Failed to read line");
         match Human::read_coord(&input) {
             Some((x, y)) => {
-                if board.is_valid(x - 1, y - 1) {
-                    (x, y)
+                if x > 0 && y > 0 && board.is_valid(x - 1, y - 1) {
+                    (x-1, y-1)
                 } else {
                     println!("Invalid move, try again ('x y')");
                     Human::ask_coord(color, board)

@@ -5,13 +5,13 @@ use crate::{board::Board, color::Color, evaluation::Evaluation, score::Score};
 use super::Strategy;
 
 #[derive(Clone)]
-pub struct AlphaBeta {
+pub struct AlphaBeta4 {
     duration: Option<Duration>,
     max_depth: usize,
     evaluation: Arc<dyn Evaluation>,
 }
 
-impl Strategy for AlphaBeta {
+impl Strategy for AlphaBeta4 {
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
         // update duration if it's not None
         match duration {
@@ -24,25 +24,25 @@ impl Strategy for AlphaBeta {
                     depth += 1;
                     best_move = self.alpha_beta(&board, color, depth, self.duration);
                 }
-                println!(
+                /*println!(
                     "Depth: {} in {:?}",
                     depth,
                     Duration::from_millis(time.elapsed().as_millis() as u64)
-                );
+                );*/
                 return best_move;
             }
         }
     }
 }
 
-impl AlphaBeta {
+impl AlphaBeta4 {
     #[allow(dead_code)]
     pub fn new(
         evaluation: Arc<dyn Evaluation>,
         max_depth: usize,
         duration: Option<Duration>,
-    ) -> AlphaBeta {
-        AlphaBeta {
+    ) -> AlphaBeta4 {
+        AlphaBeta4 {
             evaluation,
             max_depth,
             duration,
@@ -57,6 +57,43 @@ impl AlphaBeta {
     #[allow(dead_code)]
     pub fn set_max_depth(&mut self, max_depth: usize) {
         self.max_depth = max_depth;
+    }
+
+    fn possible_moves_sorted(&self, board: &Board, color: Color) -> Vec<(usize, usize)> {
+        let mut s_moves = board
+            .possible_moves()
+            .iter()
+            .map(|(x, y)| {
+                let mut board = board.clone();
+                board.set(*x, *y, color);
+                let score = self.evaluation.score(&board);
+                //println!("{} {} {}", x+1, y+1, score);
+                ((*x, *y), score)
+            })
+            .collect::<Vec<((usize, usize), Score)>>();
+
+        s_moves.sort_by(|(_, score_a), (_, score_b)| score_a.partial_cmp(&score_b).unwrap());
+
+        if let Color::White = color {
+            s_moves.reverse();
+        }
+
+        s_moves
+            .iter()
+            .map(|((x, y), _)| (*x, *y))
+            .collect::<Vec<(usize, usize)>>()
+    }
+
+    fn keep_bests_moves(
+        &self,
+        board: &Board,
+        possible_moves: Vec<(usize, usize)>,
+    ) -> Vec<(usize, usize)> {
+        let nb_max_moves = board.size() * board.size() / 4;
+        if possible_moves.len() > nb_max_moves {
+            return possible_moves[0..nb_max_moves].to_vec();
+        }
+        possible_moves
     }
 
     fn alpha_beta(
@@ -74,7 +111,10 @@ impl AlphaBeta {
             Score::WhiteCheckMate,
             duration,
         ) {
-            (_, Some((x, y))) => (x, y),
+            (_score, Some((x, y))) => {
+                //println!("Score: {} with depth {}", score, depth);
+                (x, y)
+            },
             _ => panic!("Error in alpha_beta"),
         }
     }
@@ -91,8 +131,6 @@ impl AlphaBeta {
         let mut alpha = alpha;
         let mut beta = beta;
 
-        let mut best_moves: Vec<(Score, (usize, usize))> = Vec::new();
-
         if board.is_win(color) {
             return (color.win_score(), None);
         } else if board.is_win(color.opponent()) {
@@ -105,7 +143,9 @@ impl AlphaBeta {
 
         let mut value: Score;
         let mut best_move = board.a_possible_move();
-        let possible_moves = board.possible_moves();
+        let mut possible_moves = self.possible_moves_sorted(board, color);
+
+        possible_moves = self.keep_bests_moves(board, possible_moves);
 
         if color == Color::White {
             value = Score::BlackCheckMate;
@@ -121,8 +161,6 @@ impl AlphaBeta {
                     beta,
                     duration,
                 );
-
-                best_moves.push((score, (x, y)));
 
                 if score > value {
                     value = score;
@@ -154,9 +192,6 @@ impl AlphaBeta {
                     beta,
                     duration,
                 );
-
-                best_moves.push((score, (x, y)));
-
                 if score < value {
                     value = score;
                     best_move = (x, y);
@@ -176,21 +211,10 @@ impl AlphaBeta {
             }
         }
 
-        let move_cmp = |a: &(Score, (usize, usize)), b: &(Score, (usize, usize))| {
-            if color == Color::White {
-                b.0.partial_cmp(&a.0).unwrap()
-            } else {
-                a.0.partial_cmp(&b.0).unwrap()
-            }
-        };
-
         if depth == self.max_depth {
-            println!("{}", board);
-            best_moves.sort_by(move_cmp);
-            println!("{:?}", best_moves);
-            println!("Board score : {}", self.evaluation.score(board)); // TODO: remove this debug print
-            println!("Deep score : {}", value); // TODO: remove this debug print
-            println!("Best move : {:?}", (best_move.0 + 1, best_move.1 + 1)); // TODO: remove this debug print
+            //println!("Board score : {}", self.evaluation.score(board)); // TODO: remove this debug print
+            //println!("Deep score : {}", value); // TODO: remove this debug print
+            //println!("Best move : {:?}", (best_move.0 + 1, best_move.1 + 1)); // TODO: remove this debug print
         }
 
         (value.previous(), Some(best_move))
@@ -206,7 +230,7 @@ mod tests {
     #[ignore]
     #[test]
     fn test_mini_max() {
-        let minimax = AlphaBeta::new(Arc::new(Evaluation1::new()), 7, None);
+        let minimax = AlphaBeta4::new(Arc::new(Evaluation1::new()), 5, None);
         let mut board = Board::new(4);
         //board.set(0, 0, Color::White);
         //board.set(1, 0, Color::White);

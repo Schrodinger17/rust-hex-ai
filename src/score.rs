@@ -1,8 +1,10 @@
 use core::fmt;
-use std::ops::Add;
+use std::{cmp::min, ops::Add};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Score {
+    #[allow(dead_code)]
+    Undefined,
     Advantage(f64),
     BlackMateIn(usize),
     WhiteMateIn(usize),
@@ -16,9 +18,10 @@ impl Score {
 
     pub fn to_f64(&self) -> f64 {
         match self {
+            Score::Undefined => 0.0,
             Score::Advantage(score) => *score,
             Score::BlackMateIn(n) => Score::MIN + *n as f64,
-            Score::WhiteMateIn(n) => Score::MIN - *n as f64,
+            Score::WhiteMateIn(n) => Score::MAX - *n as f64,
             Score::BlackCheckMate => Score::MIN,
             Score::WhiteCheckMate => Score::MAX,
         }
@@ -44,6 +47,7 @@ impl Score {
 
     pub fn previous(&self) -> Score {
         match self {
+            Score::Undefined => Score::Undefined,
             Score::Advantage(score) => Score::Advantage(*score),
             Score::BlackMateIn(n) => Score::BlackMateIn(n + 1),
             Score::WhiteMateIn(n) => Score::WhiteMateIn(n + 1),
@@ -56,6 +60,7 @@ impl Score {
 impl fmt::Display for Score {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Score::Undefined => write!(f, "Undefined"),
             Score::Advantage(score) => write!(f, "{:.2}", score),
             Score::BlackMateIn(moves) => write!(f, "Black mate in {}", moves),
             Score::WhiteMateIn(moves) => write!(f, "White mate in {}", moves),
@@ -86,15 +91,41 @@ impl Add for Score {
                 Score::Advantage(score1 + score2)
             }
 
+            // Checkmate
             (Score::WhiteCheckMate, _) => Score::WhiteCheckMate,
             (_, Score::WhiteCheckMate) => Score::WhiteCheckMate,
             (Score::BlackCheckMate, _) => Score::BlackCheckMate,
             (_, Score::BlackCheckMate) => Score::BlackCheckMate,
 
-            (Score::BlackMateIn(n), _) => Score::WhiteMateIn(n),
-            (_, Score::BlackMateIn(n)) => Score::WhiteMateIn(n),
-            (Score::WhiteMateIn(n), _) => Score::BlackMateIn(n),
-            (_, Score::WhiteMateIn(n)) => Score::BlackMateIn(n),
+            // Fastest mate
+            (Score::BlackMateIn(n1), Score::BlackMateIn(n2)) => Score::BlackMateIn(min(n1, n2)),
+            (Score::WhiteMateIn(n1), Score::WhiteMateIn(n2)) => Score::WhiteMateIn(min(n1, n2)),
+
+            // Fist to mate
+            (Score::BlackMateIn(n1), Score::WhiteMateIn(n2)) => {
+                if n1 < n2 {
+                    Score::BlackMateIn(n1)
+                } else {
+                    Score::WhiteMateIn(n2)
+                }
+            }
+            (Score::WhiteMateIn(n1), Score::BlackMateIn(n2)) => {
+                if n1 < n2 {
+                    Score::WhiteMateIn(n1)
+                } else {
+                    Score::BlackMateIn(n2)
+                }
+            }
+            
+            // Forced mate
+            (Score::BlackMateIn(n), _) => Score::BlackMateIn(n),
+            (_, Score::BlackMateIn(n)) => Score::BlackMateIn(n),
+            (Score::WhiteMateIn(n), _) => Score::WhiteMateIn(n),
+            (_, Score::WhiteMateIn(n)) => Score::WhiteMateIn(n),
+
+            // Undefined
+            (Score::Undefined, s) => s,
+            (s, Score::Undefined) => s,
         }
     }
 }
@@ -138,7 +169,10 @@ mod tests {
         assert_eq!(score, Score::Advantage(0.0));
 
         let score = Score::Advantage(1.0) + Score::BlackMateIn(1);
-        assert_eq!(score, Score::WhiteMateIn(1));
+        assert_eq!(score, Score::BlackMateIn(1));
+
+        let score = Score::WhiteMateIn(2) + Score::BlackMateIn(1);
+        assert_eq!(score, Score::BlackMateIn(1));
     }
 
     #[test]

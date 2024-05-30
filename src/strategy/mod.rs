@@ -1,9 +1,11 @@
 pub(crate) mod alpha_beta;
 pub(crate) mod alpha_beta_2;
 pub(crate) mod alpha_beta_3;
+pub(crate) mod alpha_beta_4;
 pub(crate) mod human;
 pub(crate) mod mini_max;
 pub(crate) mod random;
+//pub(crate) mod mcts;
 
 use crate::{board::Board, color::Color};
 
