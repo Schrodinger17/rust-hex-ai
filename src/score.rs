@@ -1,7 +1,7 @@
 use core::fmt;
 use std::{cmp::min, ops::Add};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Score {
     #[allow(dead_code)]
     Undefined,
@@ -16,35 +16,6 @@ impl Score {
     pub const MIN: f64 = -1000.0; //f64::MIN;
     pub const MAX: f64 = 1000.0; //f64::MAX;
 
-    pub fn to_f64(&self) -> f64 {
-        match self {
-            Score::Undefined => 0.0,
-            Score::Advantage(score) => *score,
-            Score::BlackMateIn(n) => Score::MIN + *n as f64,
-            Score::WhiteMateIn(n) => Score::MAX - *n as f64,
-            Score::BlackCheckMate => Score::MIN,
-            Score::WhiteCheckMate => Score::MAX,
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn from_f64(score: f64) -> Score {
-        let max: f64 = 1000.0; //f64::MAX;
-        let min: f64 = -1000.0; //f64::MIN;
-        let treshold: f64 = 50.0;
-
-        match score {
-            score if score >= max => Score::WhiteCheckMate,
-            score if score <= min => Score::BlackCheckMate,
-            score if score > max - treshold => Score::WhiteMateIn((max - score) as usize),
-            score if score < min + treshold => Score::BlackMateIn((score - min) as usize),
-            score if score > 0.0 => Score::Advantage(score),
-            score if score < 0.0 => Score::Advantage(score),
-            score if score == 0.0 => Score::Advantage(score),
-            _ => panic!("Error in Score::from_f64"),
-        }
-    }
-
     pub fn previous(&self) -> Score {
         match self {
             Score::Undefined => Score::Undefined,
@@ -53,6 +24,59 @@ impl Score {
             Score::WhiteMateIn(n) => Score::WhiteMateIn(n + 1),
             Score::BlackCheckMate => Score::BlackMateIn(1),
             Score::WhiteCheckMate => Score::WhiteMateIn(1),
+        }
+    }
+}
+
+/*
+pub trait ForwardBackwardIterator : Iterator {
+    fn prev(&mut self) -> Option<Self::Item>;
+}
+
+impl ForwardBackwardIterator for std::ops::Range<usize> {
+    fn prev(&mut self) -> Option<Self::Item> {
+        self.next_back()
+    }
+}
+
+impl Iterator for Score {
+    type Item = Score;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        *self = self.previous();
+        Some(*self)
+    }
+}
+*/
+
+impl From<Score> for f64 {
+    fn from(score: Score) -> f64 {
+        match score {
+            Score::Undefined => 0.0,
+            Score::Advantage(score) => score,
+            Score::BlackMateIn(n) => Score::MIN + n as f64,
+            Score::WhiteMateIn(n) => Score::MAX - n as f64,
+            Score::BlackCheckMate => Score::MIN,
+            Score::WhiteCheckMate => Score::MAX,
+        }
+    }
+}
+
+impl From<f64> for Score {
+    fn from(score: f64) -> Score {
+        let max: f64 = 1000.0; //f64::MAX;
+        let min: f64 = -1000.0; //f64::MIN;
+        let threshold: f64 = 50.0;
+
+        match score {
+            score if score >= max => Score::WhiteCheckMate,
+            score if score <= min => Score::BlackCheckMate,
+            score if score > max - threshold => Score::WhiteMateIn((max - score) as usize),
+            score if score < min + threshold => Score::BlackMateIn((score - min) as usize),
+            score if score > 0.0 => Score::Advantage(score),
+            score if score < 0.0 => Score::Advantage(score),
+            score if score == 0.0 => Score::Advantage(score),
+            _ => panic!("Error in Score::from_f64"),
         }
     }
 }
@@ -70,15 +94,11 @@ impl fmt::Display for Score {
     }
 }
 
-impl PartialEq<Score> for Score {
-    fn eq(&self, other: &Score) -> bool {
-        self.to_f64() == other.to_f64()
-    }
-}
-
 impl PartialOrd<Score> for Score {
     fn partial_cmp(&self, other: &Score) -> Option<std::cmp::Ordering> {
-        self.to_f64().partial_cmp(&other.to_f64())
+        let left: f64 = (*self).into();
+        let right: f64 = (*other).into();
+        left.partial_cmp(&right)
     }
 }
 
@@ -116,7 +136,7 @@ impl Add for Score {
                     Score::BlackMateIn(n2)
                 }
             }
-            
+
             // Forced mate
             (Score::BlackMateIn(n), _) => Score::BlackMateIn(n),
             (_, Score::BlackMateIn(n)) => Score::BlackMateIn(n),

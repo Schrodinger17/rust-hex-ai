@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::{rc::Rc, time::Duration};
 
 use crate::{board::Board, color::Color, evaluation::Evaluation, score::Score};
 
@@ -8,28 +8,28 @@ use super::Strategy;
 pub struct AlphaBeta {
     duration: Option<Duration>,
     max_depth: usize,
-    evaluation: Arc<dyn Evaluation>,
+    evaluation: Rc<dyn Evaluation>,
 }
 
 impl Strategy for AlphaBeta {
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
         // update duration if it's not None
         match duration {
-            None => self.alpha_beta(&board, color, self.max_depth, self.duration),
+            None => self.alpha_beta(board, color, self.max_depth, self.duration),
             Some(duration) => {
                 let time = std::time::Instant::now();
                 let mut depth = 1;
-                let mut best_move = self.alpha_beta(&board, color, depth, self.duration);
+                let mut best_move = self.alpha_beta(board, color, depth, self.duration);
                 while time.elapsed() < duration && depth < self.max_depth {
                     depth += 1;
-                    best_move = self.alpha_beta(&board, color, depth, self.duration);
+                    best_move = self.alpha_beta(board, color, depth, self.duration);
                 }
                 println!(
                     "Depth: {} in {:?}",
                     depth,
                     Duration::from_millis(time.elapsed().as_millis() as u64)
                 );
-                return best_move;
+                best_move
             }
         }
     }
@@ -38,7 +38,7 @@ impl Strategy for AlphaBeta {
 impl AlphaBeta {
     #[allow(dead_code)]
     pub fn new(
-        evaluation: Arc<dyn Evaluation>,
+        evaluation: Rc<dyn Evaluation>,
         max_depth: usize,
         duration: Option<Duration>,
     ) -> AlphaBeta {
@@ -101,6 +101,12 @@ impl AlphaBeta {
 
         if depth == 0 {
             return (self.evaluation.score(board), None);
+        }
+
+        if let Some(duration) = duration {
+            if duration.as_millis() < 100 {
+                return (self.evaluation.score(board), None);
+            }
         }
 
         let mut value: Score;
@@ -206,7 +212,7 @@ mod tests {
     #[ignore]
     #[test]
     fn test_mini_max() {
-        let minimax = AlphaBeta::new(Arc::new(Evaluation1::new()), 7, None);
+        let minimax = AlphaBeta::new(Rc::new(Evaluation1::new()), 7, None);
         let mut board = Board::new(4);
         //board.set(0, 0, Color::White);
         //board.set(1, 0, Color::White);

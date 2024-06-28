@@ -84,7 +84,6 @@ mod tests {
         assert_eq!(list_min.get(), vec![4, 2, 5]);
     }
 
-
     #[test]
     fn time_comparison() {
         let size = 100000;
@@ -93,9 +92,8 @@ mod tests {
         let mut list = vec![0; size];
         // fill with random values
         for i in 0..size {
-            list[i] = rand::random::<i32>()%100000;
+            list[i] = rand::random::<i32>() % 100000;
         }
-
 
         // Best list
         let start = std::time::Instant::now();
@@ -108,7 +106,6 @@ mod tests {
         let duration = start.elapsed();
         println!("BestList add_max: {:?}", duration);
         println!("BestList: {:?}", best_list.get());
-
 
         // Sort
         let start = std::time::Instant::now();

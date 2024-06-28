@@ -4,7 +4,7 @@ mod player;
 use std::collections::HashMap;
 
 use player::Player;
-use std::sync::Arc;
+use std::rc::Rc;
 use std::time::Duration;
 
 mod board;
@@ -43,30 +43,29 @@ use strategy::mini_max::MiniMax;
 use strategy::random::Random;
 #[allow(unused_imports)]
 //use strategy::mcts::MCTS;
-
-
 mod best_list;
 mod test;
 
+#[allow(clippy::vec_init_then_push)]
 fn main() {
     let duration = Duration::from_millis(500);
-    
+
     /*
-    let mut players: HashMap<Color, Arc<Player>> = HashMap::new();
+    let mut players: HashMap<Color, Rc<Player>> = HashMap::new();
     players.insert(
         Color::White,
-        Arc::new(Player::new(
+        Rc::new(Player::new(
             "AlphaBeta_2".to_string(),
-            Arc::new(AlphaBeta2::new(Arc::new(Evaluation1::new()), 20, None)),
+            Rc::new(AlphaBeta2::new(Rc::new(Evaluation1::new()), 20, None)),
             Some(duration),
         )),
     );
 
     players.insert(
         Color::Black,
-        Arc::new(Player::new(
+        Rc::new(Player::new(
             "AlphaBeta_4".to_string(),
-            Arc::new(AlphaBeta4::new(Arc::new(Evaluation1::new()), 20, None)),
+            Rc::new(AlphaBeta4::new(Rc::new(Evaluation1::new()), 20, None)),
             Some(duration),
         )),
     );
@@ -79,27 +78,27 @@ fn main() {
     /*
     let mut strategies = Vec::new();
 
-    strategies.push(Arc::new(Player::new(
+    strategies.push(Rc::new(Player::new(
         "Random".to_string(),
-        Arc::new(Random::new()),
+        Rc::new(Random::new()),
         None,
     )));
 
-    strategies.push(Arc::new(Player::new(
+    strategies.push(Rc::new(Player::new(
         "MiniMax".to_string(),
-        Arc::new(MiniMax::new(Arc::new(Evaluation1::new()), 10, None)),
+        Rc::new(MiniMax::new(Rc::new(Evaluation1::new()), 10, None)),
         Some(duration),
     )));
 
-    strategies.push(Arc::new(Player::new(
+    strategies.push(Rc::new(Player::new(
         "AlphaBeta".to_string(),
-        Arc::new(AlphaBeta::new(Arc::new(Evaluation1::new()), 10, None)),
+        Rc::new(AlphaBeta::new(Rc::new(Evaluation1::new()), 10, None)),
         Some(duration),
     )));
 
-    strategies.push(Arc::new(Player::new(
+    strategies.push(Rc::new(Player::new(
         "AlphaBeta2".to_string(),
-        Arc::new(AlphaBeta2::new(Arc::new(Evaluation1::new()), 10, None)),
+        Rc::new(AlphaBeta2::new(Rc::new(Evaluation1::new()), 10, None)),
         Some(duration),
     )));
 
@@ -110,23 +109,21 @@ fn main() {
 
     let mut strategies = Vec::new();
 
-    strategies.push(Arc::new(Player::new(
+    strategies.push(Rc::new(Player::new(
         "AlphaBeta2".to_string(),
-        Arc::new(AlphaBeta2::new(Arc::new(Evaluation1::new()), 10, None)),
+        Rc::new(AlphaBeta2::new(Rc::new(Evaluation1::new()), 10, None)),
         Some(duration),
     )));
 
-    strategies.push(Arc::new(Player::new(
+    strategies.push(Rc::new(Player::new(
         "AlphaBeta4".to_string(),
-        Arc::new(AlphaBeta4::new(Arc::new(Evaluation1::new()), 10, None)),
+        Rc::new(AlphaBeta4::new(Rc::new(Evaluation1::new()), 10, None)),
         Some(duration),
     )));
 
     let mut tournament = Tournament::new(strategies, 7, 10);
     tournament.play();
     tournament.print_results();
-    
-
 }
 
 /*

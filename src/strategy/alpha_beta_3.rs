@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, rc::Rc, time::Duration};
 
 use crate::{board::Board, color::Color, evaluation::Evaluation, score::Score};
 
@@ -8,28 +8,28 @@ use super::Strategy;
 pub struct AlphaBeta3 {
     duration: Option<Duration>,
     max_depth: usize,
-    evaluation: Arc<dyn Evaluation>,
+    evaluation: Rc<dyn Evaluation>,
 }
 
 impl Strategy for AlphaBeta3 {
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
         // update duration if it's not None
         match duration {
-            None => self.alpha_beta(&board, color, self.max_depth, self.duration),
+            None => self.alpha_beta(board, color, self.max_depth, self.duration),
             Some(duration) => {
                 let time = std::time::Instant::now();
                 let mut depth = 1;
-                let mut best_move = self.alpha_beta(&board, color, depth, self.duration);
+                let mut best_move = self.alpha_beta(board, color, depth, self.duration);
                 while time.elapsed() < duration && depth < self.max_depth {
                     depth += 1;
-                    best_move = self.alpha_beta(&board, color, depth, self.duration);
+                    best_move = self.alpha_beta(board, color, depth, self.duration);
                 }
                 println!(
                     "Depth: {} in {:?}",
                     depth,
                     Duration::from_millis(time.elapsed().as_millis() as u64)
                 );
-                return best_move;
+                best_move
             }
         }
     }
@@ -38,7 +38,7 @@ impl Strategy for AlphaBeta3 {
 impl AlphaBeta3 {
     #[allow(dead_code)]
     pub fn new(
-        evaluation: Arc<dyn Evaluation>,
+        evaluation: Rc<dyn Evaluation>,
         max_depth: usize,
         duration: Option<Duration>,
     ) -> AlphaBeta3 {
@@ -83,10 +83,10 @@ impl AlphaBeta3 {
     }
 
     fn get_score(&self, board: &Board, score_dict: &mut HashMap<Board, Score>) -> Score {
-        if score_dict.contains_key(&board) {
-            return score_dict[&board];
+        if score_dict.contains_key(board) {
+            score_dict[board]
         } else {
-            return self.evaluation.score(&board);
+            self.evaluation.score(board)
         }
     }
 
@@ -108,7 +108,7 @@ impl AlphaBeta3 {
             })
             .collect::<Vec<((usize, usize), Score)>>();
 
-        s_moves.sort_by(|(_, score_a), (_, score_b)| score_a.partial_cmp(&score_b).unwrap());
+        s_moves.sort_by(|(_, score_a), (_, score_b)| score_a.partial_cmp(score_b).unwrap());
 
         if let Color::White = color {
             s_moves.reverse();
@@ -132,6 +132,7 @@ impl AlphaBeta3 {
         possible_moves
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn _alpha_beta(
         &self,
         board: &Board,
@@ -155,6 +156,12 @@ impl AlphaBeta3 {
             return (self.get_score(board, score_dict), None);
         }
 
+        if let Some(duration) = duration {
+            if duration.as_millis() < 100 {
+                return (self.evaluation.score(board), None);
+            }
+        }
+
         let mut value: f64;
         let mut best_move = board.a_possible_move();
         let mut possible_moves = self.possible_moves_sorted(board, color, score_dict);
@@ -168,7 +175,7 @@ impl AlphaBeta3 {
                 new_board.set(x, y, color);
 
                 let score = match score_dict.get(&new_board) {
-                    Some(score) => score.clone(),
+                    Some(score) => *score,
                     None => {
                         self._alpha_beta(
                             &new_board,
@@ -183,8 +190,8 @@ impl AlphaBeta3 {
                     }
                 };
 
-                if score.to_f64() > value {
-                    value = score.to_f64();
+                if f64::from(score) > value {
+                    value = score.into();
                     score_dict.insert(new_board.clone(), score);
                     best_move = (x, y);
                 }
@@ -208,7 +215,7 @@ impl AlphaBeta3 {
                 new_board.set(x, y, color);
 
                 let score = match score_dict.get(&new_board) {
-                    Some(score) => score.clone(),
+                    Some(score) => *score,
                     None => {
                         self._alpha_beta(
                             &new_board,
@@ -223,8 +230,8 @@ impl AlphaBeta3 {
                     }
                 };
 
-                if score.to_f64() < value {
-                    value = score.to_f64();
+                if f64::from(score) < value {
+                    value = score.into();
                     best_move = (x, y);
                 }
 

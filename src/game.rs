@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use crate::color::Color;
@@ -7,7 +7,7 @@ use crate::{board::Board, player::Player};
 
 pub struct Game {
     pub board: Board,
-    pub players: HashMap<Color, Arc<Player>>,
+    pub players: HashMap<Color, Rc<Player>>,
     pub turn: Color,
     duration: Option<Duration>,
     pub winner: Color,
@@ -15,10 +15,10 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(board_size: usize, players: HashMap<Color, Arc<Player>>) -> Game {
+    pub fn new(board_size: usize, players: HashMap<Color, Rc<Player>>) -> Game {
         Game {
             board: Board::new(board_size),
-            players: players,
+            players,
             turn: Color::White,
             duration: None,
             winner: Color::None,
@@ -77,7 +77,7 @@ impl Game {
             if self.display {
                 println!(
                     "{} played ({}, {}) in {:?}",
-                    self.turn.to_string(),
+                    self.turn,
                     x + 1,
                     y + 1,
                     duration
@@ -88,7 +88,7 @@ impl Game {
             if self.board.is_win(self.turn) || self.board.is_full() {
                 self.winner = self.turn;
                 if self.display {
-                    println!("{} wins!", self.winner.to_string());
+                    println!("{} wins!", self.winner);
                 }
                 break;
             }

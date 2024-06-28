@@ -19,7 +19,7 @@ impl Board {
     pub fn new(size: usize) -> Board {
         Board {
             board: vec![vec![Color::None; size]; size],
-            size: size,
+            size,
         }
     }
 
@@ -36,10 +36,7 @@ impl Board {
             return false;
         }
 
-        match self.board[x][y] {
-            Color::None => true,
-            _ => false,
-        }
+        matches!(self.board[x][y], Color::None)
     }
 
     fn reach(
@@ -90,10 +87,9 @@ impl Board {
     pub fn missing_move_to_win(&self, color: Color) -> usize {
         let is_finished = |dists: &Vec<Vec<Distance>>| {
             for i in 0..self.size {
-                for j in 0..self.size {
-                    match dists[i][j] {
-                        Distance::Unexplored => return false,
-                        _ => (),
+                for row in dists.iter() {
+                    if let Distance::Unexplored = row[i] {
+                        return false;
                     }
                 }
             }
@@ -150,8 +146,8 @@ impl Board {
                     vec![vec![Distance::Unexplored; self.size]; self.size];
 
                 //change first columns of dists to 1
-                for y in 0..self.size {
-                    dists[y][0] = match self.board[y][0] {
+                for (y, row) in dists.iter_mut().enumerate() {
+                    row[0] = match self.board[y][0] {
                         Color::None => Distance::Reachable(1),
                         _ => {
                             if self.board[y][0] == color {
@@ -198,8 +194,8 @@ impl Board {
     pub fn play_random_move(&mut self, color: Color) {
         let possible_moves = self.possible_moves();
 
-        if possible_moves.len() == 0 {
-            return
+        if possible_moves.is_empty() {
+            return;
         }
 
         let mut rng = rand::thread_rng();
@@ -251,13 +247,12 @@ impl Board {
         self.board
             .iter()
             .enumerate()
-            .map(|(i, row)| {
+            .flat_map(|(i, row)| {
                 row.iter()
                     .enumerate()
                     .filter(|(_, cell)| **cell == Color::None)
                     .map(move |(j, _)| (i, j))
             })
-            .flatten()
             .collect()
     }
 
@@ -286,7 +281,7 @@ impl fmt::Display for Board {
             write_row(f, self, row)?;
         }
 
-        write_column_labels(f, self.size(), (self.size() + 1) as usize)
+        write_column_labels(f, self.size(), self.size() + 1)
     }
 }
 
@@ -441,7 +436,7 @@ mod tests {
         let start = std::time::Instant::now();
         for _ in 0..10000 {
             let board = Board::random_board(3, 10);
-            
+
             // println!("{}", board);
             let _possible_winner = board.winner();
             /*match _possible_winner {

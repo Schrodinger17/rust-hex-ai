@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc, time::Duration};
+use std::{rc::Rc, rc::Rc, time::Duration};
 
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -11,7 +11,7 @@ use super::Strategy;
 pub struct MCTS {
     duration: Option<Duration>,
     max_games: usize,
-    evaluation: Arc<dyn Evaluation>,
+    evaluation: Rc<dyn Evaluation>,
 }
 
 impl Strategy for MCTS {
@@ -114,7 +114,7 @@ impl Node {
 impl MCTS {
     #[allow(dead_code)]
     pub fn new(
-        evaluation: Arc<dyn Evaluation>,
+        evaluation: Rc<dyn Evaluation>,
         max_games: usize,
         duration: Option<Duration>,
     ) -> MCTS {
@@ -211,7 +211,7 @@ mod tests {
     #[ignore]
     #[test]
     fn test_mcts() {
-        let mcts = MCTS::new(Arc::new(Evaluation1::new()), 7, None);
+        let mcts = MCTS::new(Rc::new(Evaluation1::new()), 7, None);
         let mut board = Board::new(4);
         //board.set(0, 0, Color::White);
         //board.set(1, 0, Color::White);

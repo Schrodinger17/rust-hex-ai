@@ -1,19 +1,16 @@
-use std::{sync::Arc, time::Duration};
+use std::{rc::Rc, time::Duration};
 
 use crate::{board::Board, color::Color, strategy::Strategy};
 
 pub struct Player {
+    #[allow(dead_code)]
     pub name: String,
-    pub strategy: Arc<dyn Strategy>,
+    pub strategy: Rc<dyn Strategy>,
     pub time_by_move: Option<Duration>,
 }
 
 impl Player {
-    pub fn new(
-        name: String,
-        strategy: Arc<dyn Strategy>,
-        time_by_move: Option<Duration>,
-    ) -> Player {
+    pub fn new(name: String, strategy: Rc<dyn Strategy>, time_by_move: Option<Duration>) -> Player {
         Player {
             name,
             strategy,

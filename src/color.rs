@@ -17,15 +17,7 @@ impl Color {
         }
     }
 
-    pub fn to_string(&self) -> String {
-        match self {
-            Color::White => "White".to_string(),
-            Color::Black => "Black".to_string(),
-            Color::None => "None".to_string(),
-        }
-    }
-
-    pub fn to_char(&self) -> char {
+    pub fn to_char(self) -> char {
         match self {
             Color::Black => '○',
             Color::White => '●',

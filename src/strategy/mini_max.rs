@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::{rc::Rc, time::Duration};
 
 use crate::{board::Board, color::Color, evaluation::Evaluation, score::Score};
 
@@ -8,28 +8,28 @@ use super::Strategy;
 pub struct MiniMax {
     duration: Option<Duration>,
     max_depth: usize,
-    evaluation: Arc<dyn Evaluation>,
+    evaluation: Rc<dyn Evaluation>,
 }
 
 impl Strategy for MiniMax {
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
         // update duration if it's not None
         match duration {
-            None => self.minimax(&board, color, self.max_depth, self.duration),
+            None => self.minimax(board, color, self.max_depth, self.duration),
             Some(duration) => {
                 let time = std::time::Instant::now();
                 let mut depth = 1;
-                let mut best_move = self.minimax(&board, color, depth, self.duration);
+                let mut best_move = self.minimax(board, color, depth, self.duration);
                 while time.elapsed() < duration && depth < self.max_depth {
                     depth += 1;
-                    best_move = self.minimax(&board, color, depth, self.duration);
+                    best_move = self.minimax(board, color, depth, self.duration);
                 }
                 println!(
                     "Depth: {} in {:?}",
                     depth,
                     Duration::from_millis(time.elapsed().as_millis() as u64)
                 );
-                return best_move;
+                best_move
             }
         }
     }
@@ -38,7 +38,7 @@ impl Strategy for MiniMax {
 impl MiniMax {
     #[allow(dead_code)]
     pub fn new(
-        evaluation: Arc<dyn Evaluation>,
+        evaluation: Rc<dyn Evaluation>,
         max_depth: usize,
         duration: Option<Duration>,
     ) -> MiniMax {
@@ -87,6 +87,12 @@ impl MiniMax {
             return (self.evaluation.score(board), None);
         }
 
+        if let Some(duration) = duration {
+            if duration.as_millis() < 100 {
+                return (self.evaluation.score(board), None);
+            }
+        }
+
         let mut best_score = color.opponent().win_score();
         let mut best_move = board.a_possible_move();
 
@@ -96,16 +102,9 @@ impl MiniMax {
             let mut new_board = board.clone();
             new_board.set(x, y, color);
             let (score, _) = self._minimax(&new_board, color.opponent(), depth - 1, duration);
-            if color == Color::White {
-                if score > best_score {
-                    best_score = score;
-                    best_move = (x, y);
-                }
-            } else {
-                if score < best_score {
-                    best_score = score;
-                    best_move = (x, y);
-                }
+            if (color == Color::White && score > best_score) || score < best_score {
+                best_score = score;
+                best_move = (x, y);
             }
 
             best_moves.push((score, (x, y)));
@@ -146,7 +145,7 @@ mod tests {
     #[ignore]
     #[test]
     fn test_mini_max() {
-        let minimax = MiniMax::new(Arc::new(Evaluation1::new()), 9, None);
+        let minimax = MiniMax::new(Rc::new(Evaluation1::new()), 9, None);
         let mut board = Board::new(4);
         //board.set(0, 0, Color::White);
         //board.set(1, 0, Color::White);

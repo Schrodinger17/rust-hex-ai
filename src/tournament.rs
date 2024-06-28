@@ -1,10 +1,10 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, rc::Rc};
 
 use crate::{color::Color, game::Game, player::Player};
 
 #[warn(dead_code)]
 pub struct Tournament {
-    pub players: Vec<Arc<Player>>,
+    pub players: Vec<Rc<Player>>,
     pub games: Vec<Game>,
     pub results: Vec<Vec<usize>>,
     nb_games: usize,
@@ -12,12 +12,12 @@ pub struct Tournament {
 
 #[allow(dead_code)]
 impl Tournament {
-    pub fn new(players: Vec<Arc<Player>>, board_size: usize, nb_games: usize) -> Tournament {
+    pub fn new(players: Vec<Rc<Player>>, board_size: usize, nb_games: usize) -> Tournament {
         let mut games = Vec::new();
         for player1 in players.iter() {
             for player2 in players.iter() {
                 for _ in 0..nb_games {
-                    let mut players: HashMap<Color, Arc<Player>> = HashMap::new();
+                    let mut players: HashMap<Color, Rc<Player>> = HashMap::new();
                     players.insert(Color::White, player1.clone());
                     players.insert(Color::Black, player2.clone());
 
@@ -29,10 +29,10 @@ impl Tournament {
         let n = players.len();
 
         Tournament {
-            players: players,
-            games: games,
+            players,
+            games,
             results: vec![vec![0; n]; n],
-            nb_games: nb_games,
+            nb_games,
         }
     }
 
@@ -43,9 +43,8 @@ impl Tournament {
             self.games[id].set_display(false);
 
             self.games[id].play();
-            match self.games[id].winner {
-                Color::White => self.results[cell_id / n][cell_id % n] += 1,
-                _ => (),
+            if self.games[id].winner == Color::White {
+                self.results[cell_id / n][cell_id % n] += 1
             }
             println!("{}", self.games[id].board);
             println!("Game {}/{} finished.", id + 1, self.games.len());

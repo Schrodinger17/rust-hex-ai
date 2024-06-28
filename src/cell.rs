@@ -1,6 +1,6 @@
 use std::ops::Add;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Cell {
     pub x: i32,
     pub y: i32,
@@ -8,13 +8,7 @@ pub struct Cell {
 
 impl Cell {
     pub fn new(x: i32, y: i32) -> Cell {
-        Cell { x: x, y: y }
-    }
-}
-
-impl PartialEq for Cell {
-    fn eq(&self, other: &Self) -> bool {
-        self.x == other.x && self.y == other.y
+        Cell { x, y }
     }
 }
 
@@ -35,7 +29,7 @@ impl Cell {
     }
 
     pub fn neighbors(&self, board_size: usize) -> Vec<Cell> {
-        let steps = vec![
+        let steps = [
             Cell::new(-1, 0),
             Cell::new(-1, 1),
             Cell::new(0, -1),

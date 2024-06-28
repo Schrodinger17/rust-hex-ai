@@ -13,7 +13,7 @@ pub struct Human {
 impl Strategy for Human {
     #[allow(unused_variables)]
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
-        Human::ask_coord(color, &board)
+        Human::ask_coord(color, board)
     }
 }
 
@@ -37,14 +37,14 @@ impl Human {
 
     fn ask_coord(color: Color, board: &Board) -> (usize, usize) {
         let mut input = String::new();
-        println!("{}'s turn", color.to_string());
+        println!("{}'s turn", color);
         std::io::stdin()
             .read_line(&mut input)
             .expect("Failed to read line");
         match Human::read_coord(&input) {
             Some((x, y)) => {
                 if x > 0 && y > 0 && board.is_valid(x - 1, y - 1) {
-                    (x-1, y-1)
+                    (x - 1, y - 1)
                 } else {
                     println!("Invalid move, try again ('x y')");
                     Human::ask_coord(color, board)
