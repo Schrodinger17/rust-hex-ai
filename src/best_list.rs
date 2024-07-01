@@ -91,8 +91,8 @@ mod tests {
 
         let mut list = vec![0; size];
         // fill with random values
-        for i in 0..size {
-            list[i] = rand::random::<i32>() % 100000;
+        for e in list.iter_mut() {
+            *e = rand::random::<i32>() % 100000;
         }
 
         // Best list

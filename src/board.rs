@@ -308,9 +308,9 @@ mod tests {
         board.set(1, 1, Color::White);
         //println!("{}", board.is_win(Color::White));
         //println!("{}", board.is_win(Color::Black));
-        assert_eq!(board.is_win(Color::White), false);
-        assert_eq!(board.is_win(Color::Black), true);
-        assert_eq!(board.is_full(), true);
+        assert!(!board.is_win(Color::White));
+        assert!(board.is_win(Color::Black));
+        assert!(board.is_full());
     }
 
     #[test]
@@ -319,7 +319,7 @@ mod tests {
         println!("{}", board);
         println!("{}", board.missing_move_to_win(Color::White));
 
-        assert_eq!(board.is_win(Color::White), false);
+        assert!(!board.is_win(Color::White));
     }
 
     #[test]
@@ -333,7 +333,7 @@ mod tests {
         println!("{}", board);
         println!("{}", board.missing_move_to_win(Color::White));
 
-        assert_eq!(board.is_win(Color::White), true);
+        assert!(board.is_win(Color::White));
     }
 
     #[test]
@@ -346,7 +346,7 @@ mod tests {
         println!("{}", board);
         println!("{}", board.missing_move_to_win(Color::White));
 
-        assert_eq!(board.is_win(Color::White), true);
+        assert!(board.is_win(Color::White));
     }
 
     #[test]
