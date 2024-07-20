@@ -38,8 +38,8 @@ impl fmt::Display for Color {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Color::Black => write!(f, "Black"),
-            Color::White => write!(f, "None"),
-            Color::None => write!(f, "White"),
+            Color::White => write!(f, "White"),
+            Color::None => write!(f, "None"),
         }
     }
 }

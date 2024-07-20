@@ -24,11 +24,11 @@ impl Strategy for AlphaBeta2 {
                     depth += 1;
                     best_move = self.alpha_beta(board, color, depth, self.duration);
                 }
-                /*println!(
+                println!(
                     "Depth: {} in {:?}",
                     depth,
                     Duration::from_millis(time.elapsed().as_millis() as u64)
-                );*/
+                );
                 best_move
             }
         }

@@ -48,9 +48,8 @@ mod test;
 
 #[allow(clippy::vec_init_then_push)]
 fn main() {
-    let duration = Duration::from_millis(500);
+    let duration = Duration::from_millis(5000);
 
-    /*
     let mut players: HashMap<Color, Rc<Player>> = HashMap::new();
     players.insert(
         Color::White,
@@ -73,7 +72,6 @@ fn main() {
     let mut hex = Game::new(5, players);
     hex.set_duration(duration);
     hex.play();
-    */
 
     /*
     let mut strategies = Vec::new();
@@ -106,7 +104,7 @@ fn main() {
     tournament.play();
     tournament.print_results();
     */
-
+    /*
     let mut strategies = Vec::new();
 
     strategies.push(Rc::new(Player::new(
@@ -121,9 +119,10 @@ fn main() {
         Some(duration),
     )));
 
-    let mut tournament = Tournament::new(strategies, 7, 10);
+    let mut tournament = Tournament::new(strategies, 5, 4);
     tournament.play();
     tournament.print_results();
+    */
 }
 
 /*

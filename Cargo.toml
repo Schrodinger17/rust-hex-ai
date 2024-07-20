@@ -7,7 +7,5 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.31"
-druid = "0.8.3"
-druid-shell = "0.8.3"
 rand = "0.8.5"
 random = "0.14.0"
