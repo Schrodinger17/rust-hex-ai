@@ -36,7 +36,7 @@ impl Board {
             return false;
         }
 
-        matches!(self.board[x][y], Color::None)
+        self.board[x][y] == Color::None
     }
 
     fn reach(
@@ -233,14 +233,7 @@ impl Board {
     }
 
     pub fn is_full(&self) -> bool {
-        for i in 0..self.size {
-            for j in 0..self.size {
-                if self.board[i][j] == Color::None {
-                    return false;
-                }
-            }
-        }
-        true
+        self.first_possible_move() == None
     }
 
     pub fn possible_moves(&self) -> Vec<(usize, usize)> {
