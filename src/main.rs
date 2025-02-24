@@ -1,39 +1,29 @@
 #![allow(unused_imports)]
+
+mod best_list;
+mod board;
+mod cell;
+mod color;
+mod display;
+mod distance;
+mod evaluation;
+mod game;
+mod gui;
 mod player;
+mod score;
+mod strategy;
+mod tournament;
 
 use std::collections::HashMap;
-
-use player::Player;
 use std::rc::Rc;
 use std::time::Duration;
 
-mod board;
-mod game;
-use game::Game;
-mod cell;
-mod display;
-mod distance;
-mod gui;
-mod tournament;
-use tournament::Tournament;
-
-mod color;
-mod score;
-
 use color::Color;
-mod strategy;
-
-mod evaluation;
-use evaluation::evaluation1::Evaluation1;
-use strategy::alpha_beta::AlphaBeta;
-use strategy::alpha_beta_2::AlphaBeta2;
-use strategy::alpha_beta_4::AlphaBeta4;
-use strategy::human::Human;
-use strategy::mini_max::MiniMax;
-use strategy::random::Random;
-//use strategy::mcts::MCTS;
-mod best_list;
-mod test;
+use evaluation::*;
+use game::Game;
+use player::Player;
+use strategy::*;
+use tournament::Tournament;
 
 #[allow(clippy::vec_init_then_push)]
 fn main() {

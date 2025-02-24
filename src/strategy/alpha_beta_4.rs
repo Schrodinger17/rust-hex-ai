@@ -229,7 +229,7 @@ impl AlphaBeta4 {
 
 #[cfg(test)]
 mod tests {
-    use crate::evaluation::evaluation1::Evaluation1;
+    use crate::*;
 
     use super::*;
 
