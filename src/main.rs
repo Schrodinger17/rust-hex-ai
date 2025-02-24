@@ -1,6 +1,6 @@
+#![allow(unused_imports)]
 mod player;
 
-#[allow(unused_imports)]
 use std::collections::HashMap;
 
 use player::Player;
@@ -9,50 +9,39 @@ use std::time::Duration;
 
 mod board;
 mod game;
-#[allow(unused_imports)]
 use game::Game;
 mod cell;
 mod display;
 mod distance;
 mod gui;
 mod tournament;
-#[allow(unused_imports)]
 use tournament::Tournament;
 
 mod color;
 mod score;
-#[allow(unused_imports)]
-use color::Color;
 
+use color::Color;
 mod strategy;
 
 mod evaluation;
-#[allow(unused_imports)]
 use evaluation::evaluation1::Evaluation1;
-#[allow(unused_imports)]
 use strategy::alpha_beta::AlphaBeta;
-#[allow(unused_imports)]
 use strategy::alpha_beta_2::AlphaBeta2;
-#[allow(unused_imports)]
 use strategy::alpha_beta_4::AlphaBeta4;
-#[allow(unused_imports)]
 use strategy::human::Human;
-#[allow(unused_imports)]
 use strategy::mini_max::MiniMax;
-#[allow(unused_imports)]
 use strategy::random::Random;
-#[allow(unused_imports)]
 //use strategy::mcts::MCTS;
 mod best_list;
 mod test;
 
 #[allow(clippy::vec_init_then_push)]
 fn main() {
-    let duration = Duration::from_millis(5000);
+    let duration = Duration::from_millis(100);
 
     let mut players: HashMap<Color, Rc<Player>> = HashMap::new();
     players.insert(
-        Color::White,
+        Color::Black,
         Rc::new(Player::new(
             "AlphaBeta_2".to_string(),
             Rc::new(AlphaBeta2::new(Rc::new(Evaluation1::new()), 20, None)),
@@ -61,7 +50,7 @@ fn main() {
     );
 
     players.insert(
-        Color::Black,
+        Color::White,
         Rc::new(Player::new(
             "AlphaBeta_4".to_string(),
             Rc::new(AlphaBeta4::new(Rc::new(Evaluation1::new()), 20, None)),

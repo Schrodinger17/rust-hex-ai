@@ -1,65 +1,70 @@
+#![allow(dead_code)]
+
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 struct BestList<T: PartialOrd + Clone> {
-    size: usize,
     list: Vec<T>,
+    rev: bool,
 }
 
 impl<T: PartialOrd + Clone> BestList<T> {
-    #[allow(dead_code)]
-    pub fn new(size: usize) -> BestList<T> {
+    pub fn new(capacity: usize) -> BestList<T> {
         BestList {
-            size,
-            list: Vec::with_capacity(size),
+            list: Vec::with_capacity(capacity),
+            rev: false,
         }
     }
 
-    #[allow(dead_code)]
+    pub fn new_rev(capacity: usize) -> BestList<T> {
+        BestList {
+            rev: true,
+            ..BestList::new(capacity)
+        }
+    }
+
     pub fn get(&self) -> Vec<T> {
         self.list.clone()
     }
 
-    #[allow(dead_code)]
-    pub fn add_max(&mut self, item: T) {
-        if self.list.len() < self.size {
+    pub fn add(&mut self, item: T) {
+        let cmp = |a: &T, b: &T| {
+            if !self.rev {
+                a > b
+            } else {
+                a < b
+            }
+        };
+
+        if self.list.is_empty() {
+            self.list.push(item);
+            return;
+        }
+
+        let capacity = self.list.capacity();
+        if self.list.capacity() != self.list.len() {
             self.list.push(item);
         } else {
-            let mut min = 0;
-            for i in 1..self.size {
-                if self.list[i] < self.list[min] {
-                    min = i;
-                }
-            }
-            if item > self.list[min] {
-                self.list[min] = item;
-            }
+            self.list[capacity - 1] = item;
+        }
+        let mut id = self.list.len() - 1;
+        while id > 1 && cmp(&self.list[id], &self.list[id - 1]) {
+            self.list.swap(id, id - 1);
+            id -= 1;
         }
     }
 
-    #[allow(dead_code)]
-    pub fn add_min(&mut self, item: T) {
-        if self.list.len() < self.size {
-            self.list.push(item);
-        } else {
-            let mut max = 0;
-            for i in 1..self.size {
-                if self.list[i] > self.list[max] {
-                    max = i;
-                }
-            }
-            if item < self.list[max] {
-                self.list[max] = item;
-            }
+    pub fn from_vec(vec: &[T], capacity: usize) -> BestList<T> {
+        BestList::from_iter(vec.iter().cloned(), capacity)
+    }
+
+    pub fn from_iter<I>(iter: I, capacity: usize) -> BestList<T>
+    where
+        I: Iterator<Item = T>,
+    {
+        let mut res = BestList::new(capacity);
+        for v in iter {
+            res.add(v.clone());
         }
-    }
-
-    #[allow(dead_code)]
-    pub fn sort(&mut self) {
-        self.list.sort_by(|a, b| b.partial_cmp(a).unwrap());
-    }
-
-    #[allow(dead_code)]
-    pub fn reversed_sort(&mut self) {
-        self.list.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        res
     }
 }
 
@@ -71,20 +76,37 @@ mod tests {
 
     #[test]
     fn add_test() {
-        let mut list_max = BestList::new(3);
-        let mut list_min = BestList::new(3);
+        let mut max_values = BestList::new(3);
         let values = vec![10, 2, 5, 4, 5, 8, 7, 8, 9];
 
         for value in values {
-            list_max.add_max(value);
-            list_min.add_min(value);
+            max_values.add(value);
         }
 
-        assert_eq!(list_max.get(), vec![10, 9, 8]);
-        assert_eq!(list_min.get(), vec![4, 2, 5]);
+        assert_eq!(max_values.get(), vec![10, 9, 8]);
     }
 
     #[test]
+    fn from_vec() {
+        let values = vec![10, 2, 5, 4, 5, 8, 7, 8, 9];
+
+        let max_values = BestList::from_vec(&values, 3);
+
+        assert_eq!(values.get(0), Some(&10));
+        assert_eq!(max_values.get(), vec![10, 9, 8]);
+    }
+
+    #[test]
+    fn from_iter() {
+        let values = vec![10, 2, 5, 4, 5, 8, 7, 8, 9];
+
+        let max_values = BestList::from_iter(values.iter().cloned(), 3);
+
+        assert_eq!(max_values.get(), vec![10, 9, 8]);
+    }
+
+    #[test]
+    #[ignore = "benchmark"]
     fn time_comparison() {
         let size = 100000;
         let bests = 10;
@@ -100,9 +122,8 @@ mod tests {
         let mut best_list: BestList<i32> = BestList::new(bests);
 
         for e in list.iter() {
-            best_list.add_max(*e);
+            best_list.add(*e);
         }
-        best_list.sort();
         let duration = start.elapsed();
         println!("BestList add_max: {:?}", duration);
         println!("BestList: {:?}", best_list.get());
