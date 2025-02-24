@@ -9,7 +9,7 @@ use crate::display::{write_column_labels, write_row};
 use crate::distance::Distance;
 
 #[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub struct Board {
     pub board: Vec<Vec<Color>>,
     pub size: usize,
@@ -42,34 +42,34 @@ impl Board {
     fn reach(
         &self,
         player: Color,
-        dist: usize,
-        dists: Vec<Vec<Distance>>,
+        distance: usize,
+        distances: Vec<Vec<Distance>>,
     ) -> (Vec<Vec<Distance>>, bool) {
         //println!("reach called with dist of {}", dist);
-        let mut new_dists = dists.clone();
+        let mut new_distances = distances.clone();
         let mut changed = false;
 
         for i in 0..self.size {
             for j in 0..self.size {
-                if let Distance::Reachable(d) = dists[i][j] {
-                    if d == dist {
+                if let Distance::Reachable(d) = distances[i][j] {
+                    if d == distance {
                         for neighbor in Cell::new(i as i32, j as i32).neighbors(self.size) {
                             if let Distance::Unexplored =
-                                dists[neighbor.x as usize][neighbor.y as usize]
+                                distances[neighbor.x as usize][neighbor.y as usize]
                             {
                                 changed = true;
                                 match self.board[neighbor.x as usize][neighbor.y as usize] {
                                     Color::None => {
-                                        new_dists[neighbor.x as usize][neighbor.y as usize] =
-                                            Distance::Reachable(dist + 1)
+                                        new_distances[neighbor.x as usize][neighbor.y as usize] =
+                                            Distance::Reachable(distance + 1)
                                     }
                                     p => {
                                         if p == player {
-                                            new_dists[neighbor.x as usize][neighbor.y as usize] =
-                                                Distance::Reachable(dist);
-                                            (new_dists, _) = self.reach(player, dist, new_dists);
+                                            new_distances[neighbor.x as usize][neighbor.y as usize] =
+                                                Distance::Reachable(distance);
+                                            (new_distances, _) = self.reach(player, distance, new_distances);
                                         } else {
-                                            new_dists[neighbor.x as usize][neighbor.y as usize] =
+                                            new_distances[neighbor.x as usize][neighbor.y as usize] =
                                                 Distance::Unreachable;
                                         }
                                     }
@@ -81,13 +81,13 @@ impl Board {
             }
         }
 
-        (new_dists, changed)
+        (new_distances, changed)
     }
 
     pub fn missing_move_to_win(&self, color: Color) -> usize {
-        let is_finished = |dists: &Vec<Vec<Distance>>| {
+        let is_finished = |distances: &Vec<Vec<Distance>>| {
             for i in 0..self.size {
-                for row in dists.iter() {
+                for row in distances.iter() {
                     if let Distance::Unexplored = row[i] {
                         return false;
                     }
@@ -98,9 +98,9 @@ impl Board {
 
         match color {
             Color::Black => {
-                let mut dists: Vec<Vec<Distance>> =
+                let mut distances: Vec<Vec<Distance>> =
                     vec![vec![Distance::Unexplored; self.size]; self.size];
-                dists[0] = self.board[0]
+                distances[0] = self.board[0]
                     .iter()
                     .map(|x| match x {
                         Color::None => Distance::Reachable(1),
@@ -116,20 +116,20 @@ impl Board {
 
                 // reach all cells
                 let mut dist = 0;
-                while !is_finished(&dists) {
-                    //println!("{} {:?}", dist, dists);
+                while !is_finished(&distances) {
+                    //println!("{} {:?}", dist, distances);
                     let changed;
-                    (dists, changed) = self.reach(color, dist, dists);
+                    (distances, changed) = self.reach(color, dist, distances);
                     dist += 1;
                     if !changed && dist != 1 {
                         break;
                     }
                 }
 
-                //println!("{:?}", dists);
+                //println!("{:?}", distances);
 
                 // get the minimum distance to the last row
-                match dists[self.size - 1]
+                match distances[self.size - 1]
                     .iter()
                     .filter_map(|x| match x {
                         Distance::Reachable(d) => Some(d),
@@ -142,11 +142,11 @@ impl Board {
                 }
             }
             Color::White => {
-                let mut dists: Vec<Vec<Distance>> =
+                let mut distances: Vec<Vec<Distance>> =
                     vec![vec![Distance::Unexplored; self.size]; self.size];
 
-                //change first columns of dists to 1
-                for (y, row) in dists.iter_mut().enumerate() {
+                //change first columns of distances to 1
+                for (y, row) in distances.iter_mut().enumerate() {
                     row[0] = match self.board[y][0] {
                         Color::None => Distance::Reachable(1),
                         _ => {
@@ -161,20 +161,20 @@ impl Board {
 
                 // reach all cells
                 let mut dist = 0;
-                while !is_finished(&dists) {
-                    //println!("{} {:?}", dist, dists);
+                while !is_finished(&distances) {
+                    //println!("{} {:?}", dist, distances);
                     let changed;
-                    (dists, changed) = self.reach(color, dist, dists);
+                    (distances, changed) = self.reach(color, dist, distances);
                     dist += 1;
                     if !changed && dist != 1 {
                         break;
                     }
                 }
 
-                //println!("{:?}", dists);
+                //println!("{:?}", distances);
 
                 // get the minimum distance to the last column
-                match dists
+                match distances
                     .iter()
                     .map(|row| row[self.size - 1])
                     .filter_map(|x| match x {
@@ -256,15 +256,8 @@ impl Board {
             .collect()
     }
 
-    pub fn a_possible_move(&self) -> (usize, usize) {
-        for i in 0..self.size {
-            for j in 0..self.size {
-                if self.board[i][j] == Color::None {
-                    return (i, j);
-                }
-            }
-        }
-        panic!("No possible move")
+    pub fn first_possible_move(&self) -> Option<(usize, usize)> {
+        self.possible_moves().get(0).cloned()
     }
 
     #[allow(dead_code)]
@@ -284,15 +277,6 @@ impl fmt::Display for Board {
         write_column_labels(f, self.size(), self.size() + 1)
     }
 }
-
-impl Hash for Board {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.board.hash(state);
-        self.size.hash(state);
-    }
-}
-
-impl Eq for Board {}
 
 //test
 #[cfg(test)]
@@ -320,6 +304,14 @@ mod tests {
         println!("{}", board.missing_move_to_win(Color::White));
 
         assert!(!board.is_win(Color::White));
+    }
+
+    #[test]
+    fn first_possible_move() {
+        let mut board = Board::new(2);
+        board.set(0, 0, Color::Black);
+
+        assert_eq!(board.first_possible_move().unwrap(), (0, 1));
     }
 
     #[test]

@@ -110,7 +110,7 @@ impl AlphaBeta {
         }
 
         let mut value: Score;
-        let mut best_move = board.a_possible_move();
+        let mut best_move = board.first_possible_move().unwrap();
         let possible_moves = board.possible_moves();
 
         if color == Color::White {

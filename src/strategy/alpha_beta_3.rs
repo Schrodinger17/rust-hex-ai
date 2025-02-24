@@ -163,7 +163,7 @@ impl AlphaBeta3 {
         }
 
         let mut value: f64;
-        let mut best_move = board.a_possible_move();
+        let mut best_move = board.first_possible_move().unwrap();
         let mut possible_moves = self.possible_moves_sorted(board, color, score_dict);
 
         possible_moves = self.keep_bests_moves(board, possible_moves);

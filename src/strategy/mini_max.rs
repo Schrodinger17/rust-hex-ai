@@ -94,7 +94,7 @@ impl MiniMax {
         }
 
         let mut best_score = color.opponent().win_score();
-        let mut best_move = board.a_possible_move();
+        let mut best_move = board.first_possible_move().unwrap();
 
         let mut best_moves: Vec<(Score, (usize, usize))> = Vec::new();
 
