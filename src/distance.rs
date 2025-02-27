@@ -1,8 +1,34 @@
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Distance {
     Reachable(usize),
     Unreachable,
     Unexplored,
+}
+
+impl Distance {
+    #[allow(unused)]
+    pub fn unwrap(self) -> usize {
+        match self {
+            Distance::Reachable(d) => d,
+            Distance::Unreachable => panic!("Can't unwrap Distance::Unreachable"),
+            Distance::Unexplored => panic!("Can't unwrap Distance::Unexplored"),
+        }
+    }
+}
+
+use std::cmp::Ordering;
+
+impl std::cmp::PartialOrd for Distance {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (Distance::Unexplored, _) => None,
+            (_, Distance::Unexplored) => None,
+            (Distance::Reachable(a), Distance::Reachable(b)) => a.partial_cmp(b),
+            (_, Distance::Reachable(_)) => Some(Ordering::Greater),
+            (Distance::Reachable(_), _) => Some(Ordering::Less),
+            (Distance::Unreachable, Distance::Unreachable) => Some(Ordering::Equal),
+        }
+    }
 }
 
 impl std::fmt::Display for Distance {
@@ -63,5 +89,48 @@ mod tests {
         ];
 
         print_distances(distances);
+    }
+
+    #[test]
+    fn cmp() {
+        // Equal
+        assert_eq!(
+            Distance::Reachable(1).partial_cmp(&Distance::Reachable(1)),
+            Some(Ordering::Equal)
+        );
+        assert_eq!(
+            Distance::Unreachable.partial_cmp(&Distance::Unreachable),
+            Some(Ordering::Equal)
+        );
+
+        // Less
+        assert_eq!(
+            Distance::Reachable(1).partial_cmp(&Distance::Reachable(2)),
+            Some(Ordering::Less)
+        );
+
+        // Greater
+        assert_eq!(
+            Distance::Reachable(2).partial_cmp(&Distance::Reachable(1)),
+            Some(Ordering::Greater)
+        );
+        assert_eq!(
+            Distance::Unreachable.partial_cmp(&Distance::Reachable(1)),
+            Some(Ordering::Greater)
+        );
+
+        // Incomparable
+        assert_eq!(
+            Distance::Unexplored.partial_cmp(&Distance::Unexplored),
+            None
+        );
+        assert_eq!(
+            Distance::Unexplored.partial_cmp(&Distance::Unreachable),
+            None
+        );
+        assert_eq!(
+            Distance::Unexplored.partial_cmp(&Distance::Reachable(1)),
+            None
+        );
     }
 }
