@@ -5,13 +5,11 @@ pub enum Distance {
     Unexplored,
 }
 
-impl Distance {
-    #[allow(unused)]
-    pub fn unwrap(self) -> usize {
-        match self {
-            Distance::Reachable(d) => d,
-            Distance::Unreachable => panic!("Can't unwrap Distance::Unreachable"),
-            Distance::Unexplored => panic!("Can't unwrap Distance::Unexplored"),
+impl From<Distance> for Option<usize> {
+    fn from(distance: Distance) -> Self {
+        match distance {
+            Distance::Reachable(value) => Some(value),
+            Distance::Unreachable | Distance::Unexplored => None,
         }
     }
 }

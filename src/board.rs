@@ -87,7 +87,7 @@ impl Board {
         (new_distances, changed)
     }
 
-    pub fn missing_move_to_win(&self, color: Color) -> usize {
+    pub fn missing_move_to_win(&self, color: Color) -> Option<usize> {
         let is_finished = |distances: &Vec<Vec<Distance>>| {
             for i in 0..self.size {
                 for row in distances.iter() {
@@ -132,17 +132,14 @@ impl Board {
                 //println!("{:?}", distances);
 
                 // get the minimum distance to the last row
-                match distances[self.size - 1]
+                distances[self.size - 1]
                     .iter()
                     .filter_map(|x| match x {
                         Distance::Reachable(d) => Some(d),
                         _ => None,
                     })
                     .min()
-                {
-                    Some(d) => *d,
-                    None => usize::MAX,
-                }
+                    .cloned()
             }
             Color::White => {
                 let mut distances: Vec<Vec<Distance>> =
@@ -177,7 +174,7 @@ impl Board {
                 //println!("{:?}", distances);
 
                 // get the minimum distance to the last column
-                match distances
+                distances
                     .iter()
                     .map(|row| row[self.size - 1])
                     .filter_map(|x| match x {
@@ -185,10 +182,6 @@ impl Board {
                         _ => None,
                     })
                     .min()
-                {
-                    Some(d) => d,
-                    None => usize::MAX,
-                }
             }
             _ => panic!("Player::None has no missing move to win"),
         }
@@ -261,6 +254,10 @@ impl Board {
             _ => unreachable!(),
         };
 
+        if zero_queue.is_empty() {
+            return distances;
+        }
+
         // Find all cell where Reachable without moving (Distance::Reachable(0))
         let mut changed = true;
         while changed {
@@ -285,17 +282,18 @@ impl Board {
         let mut queue = zero_queue;
         while !queue.is_empty() {
             let cell = queue.pop_front().unwrap();
-            let depth = distances[cell.x as usize][cell.y as usize].unwrap();
-            for neighbor in cell.neighbors(self.size) {
-                if distances[neighbor.x as usize][neighbor.y as usize] == Distance::Unexplored {
-                    if self.board[neighbor.x as usize][neighbor.y as usize] == color {
-                        queue.push_front(neighbor);
-                        distances[neighbor.x as usize][neighbor.y as usize] =
-                            Distance::Reachable(depth);
-                    } else {
-                        queue.push_back(neighbor);
-                        distances[neighbor.x as usize][neighbor.y as usize] =
-                            Distance::Reachable(depth + 1);
+            if let Some(depth) = distances[cell.x as usize][cell.y as usize].into() {
+                for neighbor in cell.neighbors(self.size) {
+                    if distances[neighbor.x as usize][neighbor.y as usize] == Distance::Unexplored {
+                        if self.board[neighbor.x as usize][neighbor.y as usize] == color {
+                            queue.push_front(neighbor);
+                            distances[neighbor.x as usize][neighbor.y as usize] =
+                                Distance::Reachable(depth);
+                        } else {
+                            queue.push_back(neighbor);
+                            distances[neighbor.x as usize][neighbor.y as usize] =
+                                Distance::Reachable(depth + 1);
+                        }
                     }
                 }
             }
@@ -304,7 +302,7 @@ impl Board {
         distances
     }
 
-    pub fn missing_move_to_win2(&self, color: Color) -> usize {
+    pub fn missing_move_to_win2(&self, color: Color) -> Option<usize> {
         let distances = self.get_dist_matrix(color);
 
         match color {
@@ -315,13 +313,15 @@ impl Board {
                 .iter()
                 .min()
                 .unwrap()
-                .unwrap(),
+                .to_owned()
+                .into(),
             Color::White => distances
                 .iter()
                 .map(|row| row.iter().last().unwrap())
                 .min()
                 .unwrap()
-                .unwrap(),
+                .to_owned()
+                .into(),
             _ => unreachable!(),
         }
     }
@@ -353,7 +353,7 @@ impl Board {
     }
 
     pub fn is_win(&self, color: Color) -> bool {
-        self.missing_move_to_win(color) == 0
+        self.missing_move_to_win(color) == Some(0)
     }
 
     #[allow(dead_code)]
@@ -429,7 +429,7 @@ mod tests {
     fn is_game_over() {
         let board = Board::new(4);
         println!("{}", board);
-        println!("{}", board.missing_move_to_win(Color::White));
+        println!("{:?}", board.missing_move_to_win(Color::White));
 
         assert!(!board.is_win(Color::White));
     }
@@ -451,7 +451,7 @@ mod tests {
         board.set(1, 2, Color::White);
         board.set(0, 3, Color::White);
         println!("{}", board);
-        println!("{}", board.missing_move_to_win(Color::White));
+        println!("{:?}", board.missing_move_to_win(Color::White));
 
         assert!(board.is_win(Color::White));
     }
@@ -464,7 +464,7 @@ mod tests {
         board.set(2, 2, Color::White);
         board.set(1, 3, Color::White);
         println!("{}", board);
-        println!("{}", board.missing_move_to_win(Color::White));
+        println!("{:?}", board.missing_move_to_win(Color::White));
 
         assert!(board.is_win(Color::White));
     }
@@ -474,16 +474,16 @@ mod tests {
         let board = Board::new(4);
         println!("{}", board);
 
-        assert_eq!(board.missing_move_to_win(Color::White), 4);
-        assert_eq!(board.missing_move_to_win(Color::Black), 4);
+        assert_eq!(board.missing_move_to_win(Color::White), Some(4));
+        assert_eq!(board.missing_move_to_win(Color::Black), Some(4));
 
         let mut board = Board::new(4);
         board.set(3, 0, Color::White);
         board.set(3, 1, Color::White);
         println!("{}", board);
 
-        assert_eq!(board.missing_move_to_win(Color::White), 2);
-        assert_eq!(board.missing_move_to_win(Color::Black), 4);
+        assert_eq!(board.missing_move_to_win(Color::White), Some(2));
+        assert_eq!(board.missing_move_to_win(Color::Black), Some(4));
     }
 
     #[test]
@@ -567,14 +567,14 @@ mod tests {
     fn missing_moves_to_win2() {
         let mut board = Board::new(4);
 
-        assert_eq!(board.missing_move_to_win2(Color::White), 4);
-        assert_eq!(board.missing_move_to_win2(Color::Black), 4);
+        assert_eq!(board.missing_move_to_win2(Color::White), Some(4));
+        assert_eq!(board.missing_move_to_win2(Color::Black), Some(4));
 
         board.set(3, 0, Color::White);
         board.set(3, 1, Color::White);
 
-        assert_eq!(board.missing_move_to_win2(Color::White), 2);
-        assert_eq!(board.missing_move_to_win2(Color::Black), 4);
+        assert_eq!(board.missing_move_to_win2(Color::White), Some(2));
+        assert_eq!(board.missing_move_to_win2(Color::Black), Some(4));
     }
 
     use std::time::Instant;
@@ -588,7 +588,8 @@ mod tests {
         let result1: usize = boards
             .iter()
             .map(|board| {
-                board.missing_move_to_win(Color::White) + board.missing_move_to_win(Color::Black)
+                board.missing_move_to_win(Color::White).unwrap_or_default()
+                    + board.missing_move_to_win(Color::Black).unwrap_or_default()
             })
             .sum();
         let duration1 = start.elapsed();
@@ -597,7 +598,8 @@ mod tests {
         let result2: usize = boards
             .iter()
             .map(|board| {
-                board.missing_move_to_win2(Color::White) + board.missing_move_to_win2(Color::Black)
+                board.missing_move_to_win2(Color::White).unwrap_or_default()
+                    + board.missing_move_to_win2(Color::Black).unwrap_or_default()
             })
             .sum();
         let duration2 = start.elapsed();

@@ -27,14 +27,14 @@ use tournament::Tournament;
 
 #[allow(clippy::vec_init_then_push)]
 fn main() {
-    let duration = Duration::from_millis(100);
+    let duration = Duration::from_millis(1000);
 
     let mut players: HashMap<Color, Rc<Player>> = HashMap::new();
     players.insert(
         Color::Black,
         Rc::new(Player::new(
-            "AlphaBeta_2".to_string(),
-            Rc::new(AlphaBeta2::new(Rc::new(Evaluation1::new()), 20, None)),
+            "AlphaBeta_4".to_string(),
+            Rc::new(AlphaBeta4::new(Rc::new(Evaluation1::new()), 20, None)),
             Some(duration),
         )),
     );
@@ -43,12 +43,12 @@ fn main() {
         Color::White,
         Rc::new(Player::new(
             "AlphaBeta_4".to_string(),
-            Rc::new(AlphaBeta4::new(Rc::new(Evaluation1::new()), 20, None)),
+            Rc::new(AlphaBeta4::new(Rc::new(Evaluation2::new()), 20, None)),
             Some(duration),
         )),
     );
 
-    let mut hex = Game::new(5, players);
+    let mut hex = Game::new(6, players);
     hex.set_duration(duration);
     hex.play();
 

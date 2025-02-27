@@ -2,13 +2,13 @@ use super::Evaluation;
 use crate::{board::Board, color::Color, score::Score};
 
 #[derive(Clone)]
-pub struct Evaluation1;
+pub struct Evaluation2;
 
-impl Evaluation for Evaluation1 {
+impl Evaluation for Evaluation2 {
     fn score(&self, board: &Board) -> Score {
         match (
-            board.missing_move_to_win(Color::Black),
-            board.missing_move_to_win(Color::White),
+            board.missing_move_to_win2(Color::Black),
+            board.missing_move_to_win2(Color::White),
         ) {
             (None, _) => Score::WhiteCheckMate,
             (_, None) => Score::BlackCheckMate,
@@ -19,9 +19,9 @@ impl Evaluation for Evaluation1 {
     }
 }
 
-impl Evaluation1 {
-    pub fn new() -> Evaluation1 {
-        Evaluation1 {}
+impl Evaluation2 {
+    pub fn new() -> Evaluation2 {
+        Evaluation2 {}
     }
 }
 
@@ -34,9 +34,9 @@ mod tests {
     use crate::color::Color;
 
     #[test]
-    fn test_evaluation1() {
+    fn test_evaluation2() {
         let board = Board::new(3);
-        let evaluation = Evaluation1::new();
+        let evaluation = Evaluation2::new();
         assert_eq!(evaluation.score(&board), Score::Advantage(0.0));
 
         let mut board = Board::new(3);
