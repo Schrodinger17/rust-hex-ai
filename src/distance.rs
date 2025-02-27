@@ -18,15 +18,25 @@ impl Distance {
 
 use std::cmp::Ordering;
 
-impl std::cmp::PartialOrd for Distance {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+impl PartialOrd for Distance {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Distance {
+    fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
-            (Distance::Unexplored, _) => None,
-            (_, Distance::Unexplored) => None,
-            (Distance::Reachable(a), Distance::Reachable(b)) => a.partial_cmp(b),
-            (_, Distance::Reachable(_)) => Some(Ordering::Greater),
-            (Distance::Reachable(_), _) => Some(Ordering::Less),
-            (Distance::Unreachable, Distance::Unreachable) => Some(Ordering::Equal),
+            (Distance::Unexplored, Distance::Unexplored) => Ordering::Equal,
+            (Distance::Unreachable, Distance::Unreachable) => Ordering::Equal,
+
+            (Distance::Reachable(a), Distance::Reachable(b)) => a.cmp(b),
+
+            (Distance::Reachable(_), _) => Ordering::Less,
+            (_, Distance::Reachable(_)) => Ordering::Greater,
+
+            (Distance::Unreachable, Distance::Unexplored) => Ordering::Greater,
+            (Distance::Unexplored, Distance::Unreachable) => Ordering::Less,
         }
     }
 }
@@ -95,42 +105,48 @@ mod tests {
     fn cmp() {
         // Equal
         assert_eq!(
-            Distance::Reachable(1).partial_cmp(&Distance::Reachable(1)),
-            Some(Ordering::Equal)
+            Distance::Reachable(1).cmp(&Distance::Reachable(1)),
+            Ordering::Equal
         );
         assert_eq!(
-            Distance::Unreachable.partial_cmp(&Distance::Unreachable),
-            Some(Ordering::Equal)
+            Distance::Unreachable.cmp(&Distance::Unreachable),
+            Ordering::Equal
+        );
+        assert_eq!(
+            Distance::Unexplored.cmp(&Distance::Unexplored),
+            Ordering::Equal
         );
 
         // Less
         assert_eq!(
-            Distance::Reachable(1).partial_cmp(&Distance::Reachable(2)),
-            Some(Ordering::Less)
+            Distance::Reachable(1).cmp(&Distance::Reachable(2)),
+            Ordering::Less
+        );
+        assert_eq!(
+            Distance::Unexplored.cmp(&Distance::Unreachable),
+            Ordering::Less
         );
 
         // Greater
         assert_eq!(
-            Distance::Reachable(2).partial_cmp(&Distance::Reachable(1)),
-            Some(Ordering::Greater)
+            Distance::Reachable(2).cmp(&Distance::Reachable(1)),
+            Ordering::Greater
         );
         assert_eq!(
-            Distance::Unreachable.partial_cmp(&Distance::Reachable(1)),
-            Some(Ordering::Greater)
+            Distance::Unreachable.cmp(&Distance::Reachable(1)),
+            Ordering::Greater
+        );
+        assert_eq!(
+            Distance::Unexplored.cmp(&Distance::Reachable(1)),
+            Ordering::Greater
         );
 
-        // Incomparable
-        assert_eq!(
-            Distance::Unexplored.partial_cmp(&Distance::Unexplored),
-            None
-        );
-        assert_eq!(
-            Distance::Unexplored.partial_cmp(&Distance::Unreachable),
-            None
-        );
-        assert_eq!(
-            Distance::Unexplored.partial_cmp(&Distance::Reachable(1)),
-            None
-        );
+        let distances = vec![
+            Distance::Reachable(1),
+            Distance::Unexplored,
+            Distance::Unreachable,
+            Distance::Reachable(0),
+        ];
+        assert_eq!(distances.iter().min(), Some(&Distance::Reachable(0)));
     }
 }

@@ -1,4 +1,5 @@
 use core::fmt;
+use std::collections::VecDeque;
 use std::hash::Hash;
 
 use rand::Rng;
@@ -65,12 +66,14 @@ impl Board {
                                     }
                                     p => {
                                         if p == player {
-                                            new_distances[neighbor.x as usize][neighbor.y as usize] =
+                                            new_distances[neighbor.x as usize]
+                                                [neighbor.y as usize] =
                                                 Distance::Reachable(distance);
-                                            (new_distances, _) = self.reach(player, distance, new_distances);
+                                            (new_distances, _) =
+                                                self.reach(player, distance, new_distances);
                                         } else {
-                                            new_distances[neighbor.x as usize][neighbor.y as usize] =
-                                                Distance::Unreachable;
+                                            new_distances[neighbor.x as usize]
+                                                [neighbor.y as usize] = Distance::Unreachable;
                                         }
                                     }
                                 }
@@ -191,6 +194,138 @@ impl Board {
         }
     }
 
+    pub fn get_dist_matrix(&self, color: Color) -> Vec<Vec<Distance>> {
+        let mut zero_queue = VecDeque::with_capacity(self.size * self.size);
+
+        let mut distances: Vec<Vec<Distance>> = match color {
+            Color::Black => self
+                .board
+                .iter()
+                .enumerate()
+                .map(|(i, rows)| {
+                    if i == 0 {
+                        rows.iter()
+                            .enumerate()
+                            .map(|(j, value)| match value {
+                                Color::Black => {
+                                    zero_queue.push_back(Cell::new(i as i32, j as i32));
+                                    Distance::Reachable(0)
+                                }
+                                Color::White => Distance::Unreachable,
+                                Color::None => {
+                                    zero_queue.push_back(Cell::new(i as i32, j as i32));
+                                    Distance::Reachable(1)
+                                }
+                            })
+                            .collect()
+                    } else {
+                        rows.iter()
+                            .map(|value| match value {
+                                Color::White => Distance::Unreachable,
+                                _ => Distance::Unexplored,
+                            })
+                            .collect()
+                    }
+                })
+                .collect(),
+            Color::White => self
+                .board
+                .iter()
+                .enumerate()
+                .map(|(i, rows)| {
+                    rows.iter()
+                        .enumerate()
+                        .map(|(j, value)| {
+                            if j == 0 {
+                                match value {
+                                    Color::White => {
+                                        zero_queue.push_back(Cell::new(i as i32, j as i32));
+                                        Distance::Reachable(0)
+                                    }
+                                    Color::Black => Distance::Unreachable,
+                                    Color::None => {
+                                        zero_queue.push_back(Cell::new(i as i32, j as i32));
+                                        Distance::Reachable(1)
+                                    }
+                                }
+                            } else {
+                                match value {
+                                    Color::Black => Distance::Unreachable,
+                                    _ => Distance::Unexplored,
+                                }
+                            }
+                        })
+                        .collect()
+                })
+                .collect(),
+            _ => unreachable!(),
+        };
+
+        // Find all cell where Reachable without moving (Distance::Reachable(0))
+        let mut changed = true;
+        while changed {
+            changed = false;
+            let cell = zero_queue.front().unwrap();
+            for neighbor in cell.neighbors(self.size) {
+                if self.board[neighbor.x as usize][neighbor.y as usize] == color
+                    && distances[neighbor.x as usize][neighbor.y as usize] == Distance::Unexplored
+                {
+                    zero_queue.push_back(neighbor);
+                    distances[neighbor.x as usize][neighbor.y as usize] = Distance::Reachable(0);
+                    changed = true;
+                }
+            }
+
+            if zero_queue.is_empty() {
+                break;
+            }
+        }
+
+        // Iterate through depths
+        let mut queue = zero_queue;
+        while !queue.is_empty() {
+            let cell = queue.pop_front().unwrap();
+            let depth = distances[cell.x as usize][cell.y as usize].unwrap();
+            for neighbor in cell.neighbors(self.size) {
+                if distances[neighbor.x as usize][neighbor.y as usize] == Distance::Unexplored {
+                    if self.board[neighbor.x as usize][neighbor.y as usize] == color {
+                        queue.push_front(neighbor);
+                        distances[neighbor.x as usize][neighbor.y as usize] =
+                            Distance::Reachable(depth);
+                    } else {
+                        queue.push_back(neighbor);
+                        distances[neighbor.x as usize][neighbor.y as usize] =
+                            Distance::Reachable(depth + 1);
+                    }
+                }
+            }
+        }
+
+        distances
+    }
+
+    pub fn missing_move_to_win2(&self, color: Color) -> usize {
+        let distances = self.get_dist_matrix(color);
+
+        match color {
+            Color::Black => distances
+                .iter()
+                .last()
+                .unwrap()
+                .iter()
+                .min()
+                .unwrap()
+                .unwrap(),
+            Color::White => distances
+                .iter()
+                .map(|row| row.iter().last().unwrap())
+                .min()
+                .unwrap()
+                .unwrap(),
+            _ => unreachable!(),
+        }
+    }
+
     pub fn play_random_move(&mut self, color: Color) {
         let possible_moves = self.possible_moves();
 
@@ -233,7 +368,7 @@ impl Board {
     }
 
     pub fn is_full(&self) -> bool {
-        self.first_possible_move() == None
+        self.first_possible_move().is_none()
     }
 
     pub fn possible_moves(&self) -> Vec<(usize, usize)> {
@@ -250,7 +385,7 @@ impl Board {
     }
 
     pub fn first_possible_move(&self) -> Option<(usize, usize)> {
-        self.possible_moves().get(0).cloned()
+        self.possible_moves().first().copied()
     }
 
     #[allow(dead_code)]
@@ -341,10 +476,7 @@ mod tests {
 
         assert_eq!(board.missing_move_to_win(Color::White), 4);
         assert_eq!(board.missing_move_to_win(Color::Black), 4);
-    }
 
-    #[test]
-    fn missing_moves2() {
         let mut board = Board::new(4);
         board.set(3, 0, Color::White);
         board.set(3, 1, Color::White);
@@ -405,6 +537,73 @@ mod tests {
 
         let duration = start.elapsed();
         println!("Time elapsed in expensive_function() is: {:?}", duration);
+    }
+
+    #[test]
+    fn dist_matrix() {
+        let mut board = Board::new(2);
+        board.set(0, 0, Color::White);
+
+        let dist_matrix_white = board.get_dist_matrix(Color::White);
+        assert_eq!(
+            dist_matrix_white,
+            vec![
+                vec![Distance::Reachable(0), Distance::Reachable(1)],
+                vec![Distance::Reachable(1), Distance::Reachable(2)]
+            ]
+        );
+
+        let dist_matrix_black = board.get_dist_matrix(Color::Black);
+        assert_eq!(
+            dist_matrix_black,
+            vec![
+                vec![Distance::Unreachable, Distance::Reachable(1)],
+                vec![Distance::Reachable(2), Distance::Reachable(2)]
+            ]
+        );
+    }
+
+    #[test]
+    fn missing_moves_to_win2() {
+        let mut board = Board::new(4);
+
+        assert_eq!(board.missing_move_to_win2(Color::White), 4);
+        assert_eq!(board.missing_move_to_win2(Color::Black), 4);
+
+        board.set(3, 0, Color::White);
+        board.set(3, 1, Color::White);
+
+        assert_eq!(board.missing_move_to_win2(Color::White), 2);
+        assert_eq!(board.missing_move_to_win2(Color::Black), 4);
+    }
+
+    use std::time::Instant;
+
+    #[test]
+    fn perf_missing_moves() {
+        let n = 1000;
+        let boards: Vec<_> = (0..n).map(|_| Board::random_board(11, 20)).collect();
+
+        let start = Instant::now();
+        let result1: usize = boards
+            .iter()
+            .map(|board| {
+                board.missing_move_to_win(Color::White) + board.missing_move_to_win(Color::Black)
+            })
+            .sum();
+        let duration1 = start.elapsed();
+
+        let start = Instant::now();
+        let result2: usize = boards
+            .iter()
+            .map(|board| {
+                board.missing_move_to_win2(Color::White) + board.missing_move_to_win2(Color::Black)
+            })
+            .sum();
+        let duration2 = start.elapsed();
+
+        dbg!(result1, result2);
+        dbg!(duration1, duration2);
     }
 
     #[test]
