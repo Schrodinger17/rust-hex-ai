@@ -25,7 +25,7 @@ pub fn write_row(f: &mut fmt::Formatter, board: &Board, row: usize) -> fmt::Resu
         if column > 0 {
             write!(f, "  ")?;
         }
-        write!(f, "{}", board.board[row][column].to_char())?;
+        write!(f, "{}", board.get_board()[row][column].to_char())?;
     }
 
     writeln!(f, "\\{:2}", row + 1)

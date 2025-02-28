@@ -12,8 +12,8 @@ use crate::distance::Distance;
 #[allow(unused)]
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub struct Board {
-    pub board: Vec<Vec<Color>>,
-    pub size: usize,
+    board: Vec<Vec<Color>>,
+    size: usize,
 }
 
 impl Board {
@@ -30,6 +30,10 @@ impl Board {
 
     pub fn set(&mut self, x: usize, y: usize, color: Color) {
         self.board[x][y] = color;
+    }
+
+    pub fn get_board(&self) -> &Vec<Vec<Color>> {
+        &self.board
     }
 
     pub fn is_valid(&self, x: usize, y: usize) -> bool {
