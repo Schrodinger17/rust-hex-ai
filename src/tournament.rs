@@ -4,9 +4,9 @@ use crate::{color::Color, game::Game, player::Player};
 
 #[warn(dead_code)]
 pub struct Tournament {
-    pub players: Vec<Rc<Player>>,
-    pub games: Vec<Game>,
-    pub results: Vec<Vec<usize>>,
+    players: Vec<Rc<Player>>,
+    games: Vec<Game>,
+    results: Vec<Vec<usize>>,
     nb_games: usize,
 }
 
@@ -43,10 +43,10 @@ impl Tournament {
             self.games[id].set_display(false);
 
             self.games[id].play();
-            if self.games[id].winner == Color::White {
+            if self.games[id].winner() == Color::White {
                 self.results[cell_id / n][cell_id % n] += 1
             }
-            println!("{}", self.games[id].board);
+            println!("{}", self.games[id].board());
             println!("Game {}/{} finished.", id + 1, self.games.len());
         }
     }

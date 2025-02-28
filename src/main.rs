@@ -9,6 +9,7 @@ mod distance;
 mod evaluation;
 mod game;
 mod gui;
+mod log;
 mod player;
 mod score;
 mod strategy;
@@ -27,7 +28,7 @@ use tournament::Tournament;
 
 #[allow(clippy::vec_init_then_push)]
 fn main() {
-    let duration = Duration::from_millis(1000);
+    let duration = Duration::from_millis(100);
 
     let mut players: HashMap<Color, Rc<Player>> = HashMap::new();
     players.insert(
@@ -53,6 +54,7 @@ fn main() {
     hex.play();
 
     /*
+    
     let mut strategies = Vec::new();
 
     strategies.push(Rc::new(Player::new(
@@ -83,6 +85,7 @@ fn main() {
     tournament.play();
     tournament.print_results();
     */
+
     /*
     let mut strategies = Vec::new();
 
@@ -97,7 +100,7 @@ fn main() {
         Rc::new(AlphaBeta4::new(Rc::new(Evaluation1::new()), 10, None)),
         Some(duration),
     )));
-
+    
     let mut tournament = Tournament::new(strategies, 5, 4);
     tournament.play();
     tournament.print_results();

@@ -6,11 +6,11 @@ use crate::color::Color;
 use crate::{board::Board, player::Player};
 
 pub struct Game {
-    pub board: Board,
-    pub players: HashMap<Color, Rc<Player>>,
-    pub turn: Color,
+    board: Board,
+    players: HashMap<Color, Rc<Player>>,
+    turn: Color,
     duration: Option<Duration>,
-    pub winner: Color,
+    winner: Color,
     display: bool,
 }
 
@@ -24,6 +24,14 @@ impl Game {
             winner: Color::None,
             display: true,
         }
+    }
+
+    pub fn winner(&self) -> Color {
+        self.winner
+    }
+
+    pub fn board(&self) -> &Board {
+        &self.board
     }
 
     #[allow(dead_code)]
@@ -63,12 +71,12 @@ impl Game {
             // Clone the board before passing it to next_move
             let cloned_board = self.board.clone();
 
-            //chrono
+            // Time
             let start = Instant::now();
 
             let (x, y) = player.next_move(&cloned_board, self.turn);
 
-            //chrono
+            // Time
             let duration = start.elapsed();
 
             // Update the original board with the player's move
