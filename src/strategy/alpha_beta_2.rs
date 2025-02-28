@@ -223,7 +223,7 @@ impl AlphaBeta2 {
             //println!("Best move : {:?}", (best_move.0 + 1, best_move.1 + 1)); // TODO: remove this debug print
         }
 
-        (value.previous(), Some(best_move))
+        (value.next_back().unwrap(), Some(best_move))
     }
 }
 

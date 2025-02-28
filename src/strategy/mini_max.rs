@@ -132,7 +132,7 @@ impl MiniMax {
             println!("Best move : {:?}", (best_move.0 + 1, best_move.1 + 1)); // TODO: remove this debug print
         }*/
 
-        (best_score.previous(), Some(best_move))
+        (best_score.next_back().unwrap(), Some(best_move))
     }
 }
 

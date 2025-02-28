@@ -15,39 +15,44 @@ pub enum Score {
 impl Score {
     pub const MIN: f64 = -1000.0; //f64::MIN;
     pub const MAX: f64 = 1000.0; //f64::MAX;
-
-    pub fn previous(&self) -> Score {
-        match self {
-            Score::Undefined => Score::Undefined,
-            Score::Advantage(score) => Score::Advantage(*score),
-            Score::BlackMateIn(n) => Score::BlackMateIn(n + 1),
-            Score::WhiteMateIn(n) => Score::WhiteMateIn(n + 1),
-            Score::BlackCheckMate => Score::BlackMateIn(1),
-            Score::WhiteCheckMate => Score::WhiteMateIn(1),
-        }
-    }
-}
-
-/*
-pub trait ForwardBackwardIterator : Iterator {
-    fn prev(&mut self) -> Option<Self::Item>;
-}
-
-impl ForwardBackwardIterator for std::ops::Range<usize> {
-    fn prev(&mut self) -> Option<Self::Item> {
-        self.next_back()
-    }
 }
 
 impl Iterator for Score {
-    type Item = Score;
+    type Item = Self;
 
     fn next(&mut self) -> Option<Self::Item> {
-        *self = self.previous();
+        if *self == Score::WhiteCheckMate || *self == Score::WhiteCheckMate {
+            return None;
+        }
+
+        *self = match self {
+            Score::Undefined => Score::Undefined,
+            Score::Advantage(score) => Score::Advantage(*score),
+            Score::BlackMateIn(n) if *n == 1 => Score::BlackCheckMate,
+            Score::WhiteMateIn(n) if *n == 1 => Score::WhiteCheckMate,
+            Score::BlackMateIn(n) => Score::BlackMateIn(*n - 1),
+            Score::WhiteMateIn(n) => Score::WhiteMateIn(*n - 1),
+            _ => unreachable!(),
+        };
+
         Some(*self)
     }
 }
-*/
+
+impl DoubleEndedIterator for Score {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        *self = match self {
+            Score::Undefined => Score::Undefined,
+            Score::Advantage(score) => Score::Advantage(*score),
+            Score::BlackMateIn(n) => Score::BlackMateIn(*n + 1),
+            Score::WhiteMateIn(n) => Score::WhiteMateIn(*n + 1),
+            Score::BlackCheckMate => Score::BlackMateIn(1),
+            Score::WhiteCheckMate => Score::WhiteMateIn(1),
+        };
+
+        Some(*self)
+    }
+}
 
 impl From<Score> for f64 {
     fn from(score: Score) -> f64 {
@@ -196,20 +201,30 @@ mod tests {
     }
 
     #[test]
-    fn previous_score() {
-        let score = Score::BlackCheckMate.previous();
+    fn iterator() {
+        let score = Score::BlackCheckMate.next_back().unwrap();
         assert_eq!(score, Score::BlackMateIn(1));
 
-        let score = Score::WhiteCheckMate.previous();
+        let score = Score::WhiteCheckMate.next_back().unwrap();
         assert_eq!(score, Score::WhiteMateIn(1));
 
-        let score = Score::BlackMateIn(1).previous();
+        let score = Score::BlackMateIn(1).next_back().unwrap();
         assert_eq!(score, Score::BlackMateIn(2));
 
-        let score = Score::WhiteMateIn(1).previous();
+        let score = Score::WhiteMateIn(1).next_back().unwrap();
         assert_eq!(score, Score::WhiteMateIn(2));
 
-        let score = Score::Advantage(1.0).previous();
+        let score = Score::Advantage(1.0).next_back().unwrap();
         assert_eq!(score, Score::Advantage(1.0));
+
+        let scores: Vec<_> = Score::BlackCheckMate.rev().take(3).collect();
+        assert_eq!(
+            scores,
+            vec![
+                Score::BlackMateIn(1),
+                Score::BlackMateIn(2),
+                Score::BlackMateIn(3)
+            ]
+        )
     }
 }

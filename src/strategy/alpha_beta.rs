@@ -182,11 +182,13 @@ impl AlphaBeta {
             }
         }
 
-        let move_cmp = |a: &(Score, (usize, usize)), b: &(Score, (usize, usize))| {
+        let move_cmp = |a: &(Score, _), b: &(Score, _)| {
             if color == Color::White {
-                b.0.partial_cmp(&a.0).unwrap()
+                PartialOrd::partial_cmp(&b.0, &a.0).unwrap()
+                //b.0.partial_cmp(&a.0).unwrap()
             } else {
-                a.0.partial_cmp(&b.0).unwrap()
+                PartialOrd::partial_cmp(&a.0, &b.0).unwrap()
+                //a.0.partial_cmp(&b.0).unwrap()
             }
         };
 
@@ -199,7 +201,7 @@ impl AlphaBeta {
             println!("Best move : {:?}", (best_move.0 + 1, best_move.1 + 1)); // TODO: remove this debug print
         }
 
-        (value.previous(), Some(best_move))
+        (value.next_back().unwrap(), Some(best_move))
     }
 }
 
