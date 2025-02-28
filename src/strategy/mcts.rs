@@ -1,225 +1,128 @@
-use std::{rc::Rc, rc::Rc, time::Duration};
+use rand::prelude::*;
+use std::collections::HashMap;
+use std::f64;
+use std::rc::Rc;
+use std::time::{Duration, Instant};
 
-use rand::seq::SliceRandom;
-use rand::Rng;
-
-use crate::{board::Board, color::Color, evaluation::Evaluation, score::Score};
+use crate::board::Board;
+use crate::color::Color;
+use crate::evaluation::Evaluation;
+use crate::log::LogLevel;
+use crate::score::Score;
 
 use super::Strategy;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
+struct MCTSNode {
+    visits: usize,
+    wins: f64,
+    children: HashMap<(usize, usize), MCTSNode>,
+}
+
+impl MCTSNode {
+    pub fn new() -> Self {
+        MCTSNode {
+            visits: 0,
+            wins: 0.0,
+            children: HashMap::new(),
+        }
+    }
+
+    /// UCB1 Formula: Exploitation + Exploration
+    fn ucb1(&self, parent_visits: usize) -> f64 {
+        if self.visits == 0 {
+            f64::INFINITY
+        } else {
+            (self.wins / self.visits as f64)
+                + 1.41 * ((parent_visits as f64).ln() / self.visits as f64).sqrt()
+        }
+    }
+}
+
+#[allow(unused)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct MCTS {
-    duration: Option<Duration>,
-    max_games: usize,
     evaluation: Rc<dyn Evaluation>,
+    log_level: Rc<LogLevel>,
 }
 
 impl Strategy for MCTS {
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
-        // update duration if it's not None
-        match duration {
-            None => board.a_possible_move(),
-            Some(duration) => {
-                let time = std::time::Instant::now();
-
-                let root = Node::new(None, color, None);
-                let mut games_played = 0;
-                while time.elapsed() < duration && games_played < self.max_games {
-                    // MCTS Main steps
-                    let (node, state) = self.select_node(&root, &board);
-                    let outcome = self.roll_out(&state, color);
-                    self.back_propagate(&node, outcome);
-
-                    games_played += 1;
-                }
-
-                let best_move = root.best_child().move_played;
-
-                println!(
-                    "Games Played : {} in {:?}",
-                    games_played,
-                    Duration::from_millis(time.elapsed().as_millis() as u64)
-                );
-
-                return best_move.unwrap();
-            }
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct Node {
-    move_played: Option<(usize, usize)>,
-    color: Color,
-    parent: Option<Rc<Node>>,
-    pub children: Vec<Rc<Node>>,
-    n: f64,
-    q: f64,
-}
-
-impl Node {
-    fn new(move_played: Option<(usize, usize)>, color: Color, parent: Option<Rc<Node>>) -> Node {
-        Node {
-            move_played,
-            color,
-            parent,
-            children: Vec::new(),
-            n: 0.0,
-            q: 0.0,
-        }
-    }
-
-    fn create_children(&mut self, board: &Board) {
-        board.possible_moves().iter().for_each(|(x, y)| {
-            self.children.push(Rc::new(Node::new(
-                Some((*x, *y)),
-                self.color.opponent(),
-                Some(Rc::new(self.clone())),
-            )));
-        });
-    }
-
-    fn value(&self) -> f64 {
-        if self.n == 0.0 {
-            return f64::MAX;
-        } else {
-            return self.q / self.n
-                + (2.0 as f64).sqrt() * (self.parent.as_deref().unwrap().n.ln() / self.n).sqrt();
-        }
-    }
-
-    fn best_child(&self) -> Rc<Node> {
-        let best_value = self
-            .children
-            .iter()
-            .map(|child| child.value())
-            .into_iter()
-            .reduce(f64::max)
-            .unwrap();
-
-        let best_children: Vec<Rc<Node>> = self
-            .children
-            .iter()
-            .filter(|child| child.value() == best_value)
-            .map(|child| child.clone())
-            .collect();
-
-        return best_children
-            .choose(&mut rand::thread_rng())
-            .unwrap()
-            .clone();
+        let time_limit = duration.unwrap_or(Duration::from_secs(1)); // Default 1s if not provided
+        let mut board_clone = board.clone();
+        self.mcts_search(&mut board_clone, color, time_limit)
     }
 }
 
 impl MCTS {
     #[allow(unused)]
-    pub fn new(
-        evaluation: Rc<dyn Evaluation>,
-        max_games: usize,
-        duration: Option<Duration>,
-    ) -> MCTS {
+    pub fn new(evaluation: Rc<dyn Evaluation>, log_level: Rc<LogLevel>) -> Self {
         MCTS {
             evaluation,
-            max_games,
-            duration,
+            log_level,
         }
     }
 
-    #[allow(unused)]
-    pub fn set_duration(&mut self, duration: Option<Duration>) {
-        self.duration = duration;
+    /// Run MCTS with time constraint
+    fn mcts_search(&self, board: &mut Board, color: Color, duration: Duration) -> (usize, usize) {
+        let mut root = MCTSNode::new();
+        let start_time = Instant::now();
+
+        while start_time.elapsed() < duration {
+            let mut temp_board = board.clone();
+            self.simulate_mcts(&mut root, &mut temp_board, color);
+        }
+
+        // Choose the move with the most visits
+        root.children
+            .iter()
+            .max_by_key(|(_, node)| node.visits)
+            .map(|(mv, _)| *mv)
+            .unwrap()
     }
+    fn simulate_mcts(&self, node: &mut MCTSNode, board: &mut Board, color: Color) -> Score {
+        // 🔹 Check for terminal state (no moves left)
+        let possible_moves = board.possible_moves();
+        if possible_moves.is_empty() {
+            return self.evaluation.score(board); // Return final board score
+        }
 
-    #[allow(unused)]
-    pub fn set_max_games(&mut self, max_games: usize) {
-        self.max_games = max_games;
-    }
+        let mut best_move = None;
+        let mut best_ucb1 = f64::NEG_INFINITY;
 
-    fn select_node(&self, node: &Node, board: &Board) -> (Node, Board) {
-        let mut node = node;
-        let mut state = board.clone();
-
-        while !node.children.is_empty() {
-            node = &node.best_child();
-
-            let (x, y) = node.move_played.unwrap();
-            state.set(x, y, node.color);
-
-            if node.n == 0.0 {
-                return (*node, state);
+        // Selection: Pick best UCB1 move
+        for (mv, child) in &node.children {
+            let ucb1 = child.ucb1(node.visits);
+            if ucb1 > best_ucb1 {
+                best_ucb1 = ucb1;
+                best_move = Some(*mv);
             }
         }
 
-        if self.expand(node, &mut state) {
-            node = node.children.choose(&mut rand::thread_rng()).unwrap();
-
-            let (x, y) = node.move_played.unwrap();
-            state.set(x, y, node.color);
+        // Expansion: Pick an unexplored move
+        if best_move.is_none() {
+            best_move = Some(possible_moves[0]); // Safe because we checked empty case above
         }
 
-        return (*node, state);
-    }
+        if let Some((x, y)) = best_move {
+            let next_color = color.opponent(); // 🔹 Switch player for simulation!
 
-    fn expand(&self, node: &Node, state: &mut Board) -> bool {
-        if state.is_finished() {
-            return false;
+            // Play the move
+            board.set(x, y, color);
+
+            // Add new child if not present
+            let child_node = node.children.entry((x, y)).or_insert_with(MCTSNode::new);
+
+            // 🔹 Recursive Simulation (Alternate Players!)
+            let score = -self.simulate_mcts(child_node, board, next_color); // 🔄 Switch turns!
+
+            // Backpropagation
+            child_node.visits += 1;
+            child_node.wins += &score.into();
+
+            score
+        } else {
+            Score::Advantage(0.0)
         }
-
-        node.create_children(state);
-        return true;
-    }
-
-    fn roll_out(&self, state: &Board, mut color: Color) -> Score {
-        let mut state = state.clone();
-        let mut rng = rand::thread_rng();
-
-        while !state.is_finished() {
-            let (x, y) = state.possible_moves().choose(&mut rng).unwrap();
-            state.set(*x, *y, color);
-            color = color.opponent();
-        }
-
-        return state.winner().unwrap().win_score();
-    }
-
-    fn back_propagate(&self, node: &Node, outcome: Score) {
-        let mut reward = match outcome {
-            Score::WhiteCheckMate => 1.0,
-            Score::BlackCheckMate => -1.0,
-            _ => 0.0,
-        };
-
-        let mut node = node;
-
-        while node.parent.is_some() {
-            node.n += 1.0;
-            node.q += reward;
-
-            node = node.parent.unwrap().as_ref();
-
-            reward = -reward;
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::evaluation::evaluation1::Evaluation1;
-
-    use super::*;
-
-    #[ignore]
-    #[test]
-    fn test_mcts() {
-        let mcts = MCTS::new(Rc::new(Evaluation1::new()), 7, None);
-        let mut board = Board::new(4);
-        //board.set(0, 0, Color::White);
-        //board.set(1, 0, Color::White);
-        //board.set(1, 1, Color::White);
-        board.set(1, 1, Color::Black);
-
-        println!("{}", board);
-        let best_move = mcts.next_move(&board, Color::White, None);
-        println!("{:?}", best_move);
     }
 }

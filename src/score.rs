@@ -1,5 +1,8 @@
 use core::fmt;
-use std::{cmp::min, ops::Add};
+use std::{
+    cmp::min,
+    ops::{Add, Neg},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Score {
@@ -151,6 +154,20 @@ impl Add for Score {
             // Undefined
             (Score::Undefined, s) => s,
             (s, Score::Undefined) => s,
+        }
+    }
+}
+
+impl Neg for Score {
+    type Output = Self;
+    fn neg(self) -> <Self as Neg>::Output {
+        match self {
+            Score::BlackCheckMate => Score::WhiteCheckMate,
+            Score::Undefined => Score::Undefined,
+            Score::WhiteCheckMate => Score::WhiteCheckMate,
+            Score::Advantage(a) => Score::Advantage(-a),
+            Score::BlackMateIn(_) => Score::Undefined,
+            Score::WhiteMateIn(_) => Score::Undefined,
         }
     }
 }

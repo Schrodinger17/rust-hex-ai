@@ -33,10 +33,11 @@ fn main() {
         LogLevel::new()
             .add(LogFlag::GameResult)
             .add(LogFlag::Position)
+            .add(LogFlag::SearchDepth)
             .to_owned(),
     );
 
-    let duration = Duration::from_millis(100);
+    let duration = Duration::from_millis(1000);
 
     let mut players: HashMap<Color, Rc<Player>> = HashMap::new();
     players.insert(
