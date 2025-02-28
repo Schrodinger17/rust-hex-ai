@@ -1,6 +1,6 @@
-use std::time::Duration;
+use std::{rc::Rc, time::Duration};
 
-use crate::{board::Board, color::Color};
+use crate::{board::Board, color::Color, log::LogLevel};
 use rand::Rng;
 
 use super::Strategy;
@@ -9,8 +9,12 @@ use super::Strategy;
 pub struct Random;
 
 impl Strategy for Random {
-    #[allow(unused_variables)]
-    fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
+    fn next_move(
+        &self,
+        board: &Board,
+        _color: Color,
+        _duration: Option<Duration>,
+    ) -> (usize, usize) {
         let mut rng = rand::thread_rng();
         let mut x = rng.gen_range(0..board.size());
         let mut y = rng.gen_range(0..board.size());
@@ -23,7 +27,7 @@ impl Strategy for Random {
 }
 
 impl Random {
-    #[allow(dead_code)]
+    #[allow(unused)]
     pub fn new() -> Random {
         Random {}
     }

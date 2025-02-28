@@ -1,9 +1,9 @@
 use std::{rc::Rc, time::Duration};
 
-use crate::{board::Board, color::Color, strategy::Strategy};
+use crate::{board::Board, color::Color, log::LogLevel, strategy::Strategy};
 
 pub struct Player {
-    #[allow(dead_code)]
+    #[allow(unused)]
     pub name: String,
     pub strategy: Rc<dyn Strategy>,
     pub time_by_move: Option<Duration>,

@@ -9,7 +9,7 @@ use crate::color::Color;
 use crate::display::{write_column_labels, write_row};
 use crate::distance::Distance;
 
-#[allow(dead_code)]
+#[allow(unused)]
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub struct Board {
     pub board: Vec<Vec<Color>>,
@@ -339,7 +339,7 @@ impl Board {
         self.set(x, y, color);
     }
 
-    #[allow(dead_code)]
+    #[allow(unused)]
     pub fn random_board(size: usize, nb_moves: usize) -> Board {
         let mut board = Board::new(size);
         let mut color = Color::Black;
@@ -356,7 +356,7 @@ impl Board {
         self.missing_move_to_win(color) == Some(0)
     }
 
-    #[allow(dead_code)]
+    #[allow(unused)]
     pub fn winner(&self) -> Option<Color> {
         if self.is_win(Color::Black) {
             Some(Color::Black)
@@ -388,7 +388,7 @@ impl Board {
         self.possible_moves().first().copied()
     }
 
-    #[allow(dead_code)]
+    #[allow(unused)]
     pub fn is_finished(&self) -> bool {
         self.is_win(Color::Black) || self.is_win(Color::White) || self.is_full()
     }

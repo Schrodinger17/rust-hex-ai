@@ -112,7 +112,7 @@ impl Node {
 }
 
 impl MCTS {
-    #[allow(dead_code)]
+    #[allow(unused)]
     pub fn new(
         evaluation: Rc<dyn Evaluation>,
         max_games: usize,
@@ -125,12 +125,12 @@ impl MCTS {
         }
     }
 
-    #[allow(dead_code)]
+    #[allow(unused)]
     pub fn set_duration(&mut self, duration: Option<Duration>) {
         self.duration = duration;
     }
 
-    #[allow(dead_code)]
+    #[allow(unused)]
     pub fn set_max_games(&mut self, max_games: usize) {
         self.max_games = max_games;
     }

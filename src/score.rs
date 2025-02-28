@@ -3,7 +3,7 @@ use std::{cmp::min, ops::Add};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Score {
-    #[allow(dead_code)]
+    #[allow(unused)]
     Undefined,
     Advantage(f64),
     BlackMateIn(usize),
@@ -21,7 +21,7 @@ impl Iterator for Score {
     type Item = Self;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if *self == Score::WhiteCheckMate || *self == Score::WhiteCheckMate {
+        if *self == Score::WhiteCheckMate || *self == Score::BlackCheckMate {
             return None;
         }
 

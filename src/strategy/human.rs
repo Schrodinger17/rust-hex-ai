@@ -1,12 +1,12 @@
-use std::time::Duration;
+use std::{rc::Rc, time::Duration};
 
-use crate::{board::Board, color::Color};
+use crate::{board::Board, color::Color, log::LogLevel};
 
 use super::Strategy;
 
 #[derive(Clone)]
 pub struct Human {
-    #[allow(dead_code)]
+    #[allow(unused)]
     name: String,
 }
 
@@ -18,7 +18,7 @@ impl Strategy for Human {
 }
 
 impl Human {
-    #[allow(dead_code)]
+    #[allow(unused)]
     pub fn new(name: String) -> Human {
         Human { name }
     }

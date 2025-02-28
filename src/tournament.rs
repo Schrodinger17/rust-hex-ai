@@ -1,53 +1,68 @@
 use std::{collections::HashMap, rc::Rc};
 
-use crate::{color::Color, game::Game, player::Player};
+use random::default;
+
+use crate::{
+    color::Color,
+    game::Game,
+    log::{LogFlag, LogLevel},
+    player::Player,
+};
 
 #[warn(dead_code)]
+#[derive(Default)]
 pub struct Tournament {
     players: Vec<Rc<Player>>,
     games: Vec<Game>,
     results: Vec<Vec<usize>>,
     nb_games: usize,
+    log_level: Rc<LogLevel>,
 }
 
-#[allow(dead_code)]
+#[allow(unused)]
 impl Tournament {
-    pub fn new(players: Vec<Rc<Player>>, board_size: usize, nb_games: usize) -> Tournament {
-        let mut games = Vec::new();
-        for player1 in players.iter() {
-            for player2 in players.iter() {
+    pub fn new() -> Tournament {
+        Tournament::default()
+    }
+
+    pub fn set_players(&mut self, players: Vec<Rc<Player>>) {
+        self.players = players;
+    }
+
+    pub fn create_games(&mut self, board_size: usize, nb_games: usize) {
+        self.nb_games = nb_games;
+        for player1 in self.players.iter() {
+            for player2 in self.players.iter() {
                 for _ in 0..nb_games {
                     let mut players: HashMap<Color, Rc<Player>> = HashMap::new();
                     players.insert(Color::White, player1.clone());
                     players.insert(Color::Black, player2.clone());
 
-                    games.push(Game::new(board_size, players));
+                    let mut game = Game::new(board_size, players);
+                    game.set_log_level(self.log_level.clone());
+                    self.games.push(game);
                 }
             }
         }
 
-        let n = players.len();
-
-        Tournament {
-            players,
-            games,
-            results: vec![vec![0; n]; n],
-            nb_games,
-        }
+        let n = self.players.len();
+        self.results = vec![vec![0; n]; n];
     }
 
     pub fn play(&mut self) {
         let n = self.players.len();
         for id in 0..self.games.len() {
             let cell_id = id / self.nb_games;
-            self.games[id].set_display(false);
 
             self.games[id].play();
             if self.games[id].winner() == Color::White {
                 self.results[cell_id / n][cell_id % n] += 1
             }
-            println!("{}", self.games[id].board());
-            println!("Game {}/{} finished.", id + 1, self.games.len());
+
+            if self.log_level.is(LogFlag::MatchResult) {
+                println!("{}", self.games[id].board());
+                println!("Game {}/{} finished.", id + 1, self.games.len());
+            }
         }
     }
 

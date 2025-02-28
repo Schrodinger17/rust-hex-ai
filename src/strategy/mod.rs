@@ -15,9 +15,9 @@ pub use mini_max::MiniMax;
 pub use random::Random;
 //pub use mcts::MCTS;
 
-use crate::{board::Board, color::Color};
+use crate::{board::Board, color::Color, log::LogLevel};
 
-use std::time::Duration;
+use std::{rc::Rc, time::Duration};
 
 pub trait Strategy {
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize);

@@ -22,12 +22,20 @@ use std::time::Duration;
 use color::Color;
 use evaluation::*;
 use game::Game;
+use log::{LogFlag, LogLevel};
 use player::Player;
 use strategy::*;
 use tournament::Tournament;
 
 #[allow(clippy::vec_init_then_push)]
 fn main() {
+    let log_level = Rc::new(
+        LogLevel::new()
+            .add(LogFlag::GameResult)
+            .add(LogFlag::Position)
+            .to_owned(),
+    );
+
     let duration = Duration::from_millis(100);
 
     let mut players: HashMap<Color, Rc<Player>> = HashMap::new();
@@ -35,7 +43,11 @@ fn main() {
         Color::Black,
         Rc::new(Player::new(
             "AlphaBeta_4".to_string(),
-            Rc::new(AlphaBeta4::new(Rc::new(Evaluation1::new()), 20, None)),
+            Rc::new(AlphaBeta4::new(
+                Rc::new(Evaluation1::new()),
+                20,
+                log_level.clone(),
+            )),
             Some(duration),
         )),
     );
@@ -44,64 +56,80 @@ fn main() {
         Color::White,
         Rc::new(Player::new(
             "AlphaBeta_4".to_string(),
-            Rc::new(AlphaBeta4::new(Rc::new(Evaluation2::new()), 20, None)),
+            Rc::new(AlphaBeta4::new(
+                Rc::new(Evaluation2::new()),
+                20,
+                log_level.clone(),
+            )),
             Some(duration),
         )),
     );
 
-    let mut hex = Game::new(6, players);
+    let mut hex = Game::new(11, players);
     hex.set_duration(duration);
+    hex.set_log_level(log_level);
     hex.play();
 
     /*
-    
-    let mut strategies = Vec::new();
 
-    strategies.push(Rc::new(Player::new(
+    let mut players = Vec::new();
+
+    players.push(Rc::new(Player::new(
         "Random".to_string(),
         Rc::new(Random::new()),
         None,
     )));
 
-    strategies.push(Rc::new(Player::new(
+    players.push(Rc::new(Player::new(
         "MiniMax".to_string(),
-        Rc::new(MiniMax::new(Rc::new(Evaluation1::new()), 10, None)),
+        Rc::new(MiniMax::new(Rc::new(Evaluation1::new()), 10, log_level.clone())),
         Some(duration),
     )));
 
-    strategies.push(Rc::new(Player::new(
+    players.push(Rc::new(Player::new(
         "AlphaBeta".to_string(),
-        Rc::new(AlphaBeta::new(Rc::new(Evaluation1::new()), 10, None)),
+        Rc::new(AlphaBeta::new(Rc::new(Evaluation1::new()), 10, log_level.clone())),
         Some(duration),
     )));
 
-    strategies.push(Rc::new(Player::new(
+    players.push(Rc::new(Player::new(
         "AlphaBeta2".to_string(),
-        Rc::new(AlphaBeta2::new(Rc::new(Evaluation1::new()), 10, None)),
+        Rc::new(AlphaBeta2::new(Rc::new(Evaluation1::new()), 10, log_level.clone())),
         Some(duration),
     )));
 
-    let mut tournament = Tournament::new(strategies, 7, 10);
+    let mut tournament = Tournament::new();
+    tournament.set_players(players);
+    tournament.create_games(7, 10);
     tournament.play();
     tournament.print_results();
     */
 
     /*
-    let mut strategies = Vec::new();
+    let mut players = Vec::new();
 
-    strategies.push(Rc::new(Player::new(
+    players.push(Rc::new(Player::new(
         "AlphaBeta2".to_string(),
-        Rc::new(AlphaBeta2::new(Rc::new(Evaluation1::new()), 10, None)),
+        Rc::new(AlphaBeta4::new(
+            Rc::new(Evaluation1::new()),
+            10,
+            log_level.clone(),
+        )),
         Some(duration),
     )));
 
-    strategies.push(Rc::new(Player::new(
+    players.push(Rc::new(Player::new(
         "AlphaBeta4".to_string(),
-        Rc::new(AlphaBeta4::new(Rc::new(Evaluation1::new()), 10, None)),
+        Rc::new(AlphaBeta4::new(
+            Rc::new(Evaluation2::new()),
+            10,
+            log_level.clone(),
+        )),
         Some(duration),
     )));
-    
-    let mut tournament = Tournament::new(strategies, 5, 4);
+    let mut tournament = Tournament::new();
+    tournament.set_players(players);
+    tournament.create_games(5, 5);
     tournament.play();
     tournament.print_results();
     */
