@@ -218,7 +218,7 @@ mod tests {
     #[test]
     fn test_mini_max() {
         let minimax = AlphaBeta::new(Rc::new(Evaluation1::new()), 7, Rc::default());
-        let mut board = Board::new(4);
+        let mut board = Board::new();
         //board.set(0, 0, Color::White);
         //board.set(1, 0, Color::White);
         //board.set(1, 1, Color::White);

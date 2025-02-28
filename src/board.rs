@@ -6,38 +6,37 @@ use rand::Rng;
 
 use crate::cell::Cell;
 use crate::color::Color;
-use crate::display::{write_column_labels, write_row};
 use crate::distance::Distance;
+
+pub type Board = Board2<7>;
 
 #[allow(unused)]
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
-pub struct Board {
-    board: Vec<Vec<Color>>,
-    size: usize,
+pub struct Board2<const SIZE: usize> {
+    board: [[Color; SIZE]; SIZE],
 }
 
-impl Board {
-    pub fn new(size: usize) -> Board {
-        Board {
-            board: vec![vec![Color::None; size]; size],
-            size,
+impl<const SIZE: usize> Board2<SIZE> {
+    pub fn new() -> Board2<SIZE> {
+        Board2 {
+            board: [[Color::None; SIZE]; SIZE],
         }
     }
 
     pub fn size(&self) -> usize {
-        self.size
+        SIZE
     }
 
     pub fn set(&mut self, x: usize, y: usize, color: Color) {
         self.board[x][y] = color;
     }
 
-    pub fn get_board(&self) -> &Vec<Vec<Color>> {
+    pub fn get_board(&self) -> &[[Color; SIZE]; SIZE] {
         &self.board
     }
 
     pub fn is_valid(&self, x: usize, y: usize) -> bool {
-        if x >= self.size || y >= self.size {
+        if x >= SIZE || y >= SIZE {
             return false;
         }
 
@@ -54,11 +53,11 @@ impl Board {
         let mut new_distances = distances.clone();
         let mut changed = false;
 
-        for i in 0..self.size {
-            for j in 0..self.size {
+        for i in 0..SIZE {
+            for j in 0..SIZE {
                 if let Distance::Reachable(d) = distances[i][j] {
                     if d == distance {
-                        for neighbor in Cell::new(i as i32, j as i32).neighbors(self.size) {
+                        for neighbor in Cell::new(i as i32, j as i32).neighbors(SIZE) {
                             if let Distance::Unexplored =
                                 distances[neighbor.x as usize][neighbor.y as usize]
                             {
@@ -93,7 +92,7 @@ impl Board {
 
     pub fn missing_move_to_win(&self, color: Color) -> Option<usize> {
         let is_finished = |distances: &Vec<Vec<Distance>>| {
-            for i in 0..self.size {
+            for i in 0..SIZE {
                 for row in distances.iter() {
                     if let Distance::Unexplored = row[i] {
                         return false;
@@ -106,7 +105,7 @@ impl Board {
         match color {
             Color::Black => {
                 let mut distances: Vec<Vec<Distance>> =
-                    vec![vec![Distance::Unexplored; self.size]; self.size];
+                    vec![vec![Distance::Unexplored; SIZE]; SIZE];
                 distances[0] = self.board[0]
                     .iter()
                     .map(|x| match x {
@@ -136,7 +135,7 @@ impl Board {
                 //println!("{:?}", distances);
 
                 // get the minimum distance to the last row
-                distances[self.size - 1]
+                distances[SIZE - 1]
                     .iter()
                     .filter_map(|x| match x {
                         Distance::Reachable(d) => Some(d),
@@ -147,7 +146,7 @@ impl Board {
             }
             Color::White => {
                 let mut distances: Vec<Vec<Distance>> =
-                    vec![vec![Distance::Unexplored; self.size]; self.size];
+                    vec![vec![Distance::Unexplored; SIZE]; SIZE];
 
                 //change first columns of distances to 1
                 for (y, row) in distances.iter_mut().enumerate() {
@@ -180,7 +179,7 @@ impl Board {
                 // get the minimum distance to the last column
                 distances
                     .iter()
-                    .map(|row| row[self.size - 1])
+                    .map(|row| row[SIZE - 1])
                     .filter_map(|x| match x {
                         Distance::Reachable(d) => Some(d),
                         _ => None,
@@ -192,7 +191,7 @@ impl Board {
     }
 
     pub fn get_dist_matrix(&self, color: Color) -> Vec<Vec<Distance>> {
-        let mut zero_queue = VecDeque::with_capacity(self.size * self.size);
+        let mut zero_queue = VecDeque::with_capacity(SIZE * SIZE);
 
         let mut distances: Vec<Vec<Distance>> = match color {
             Color::Black => self
@@ -267,7 +266,7 @@ impl Board {
         while changed {
             changed = false;
             let cell = zero_queue.front().unwrap();
-            for neighbor in cell.neighbors(self.size) {
+            for neighbor in cell.neighbors(SIZE) {
                 if self.board[neighbor.x as usize][neighbor.y as usize] == color
                     && distances[neighbor.x as usize][neighbor.y as usize] == Distance::Unexplored
                 {
@@ -287,7 +286,7 @@ impl Board {
         while !queue.is_empty() {
             let cell = queue.pop_front().unwrap();
             if let Some(depth) = distances[cell.x as usize][cell.y as usize].into() {
-                for neighbor in cell.neighbors(self.size) {
+                for neighbor in cell.neighbors(SIZE) {
                     if distances[neighbor.x as usize][neighbor.y as usize] == Distance::Unexplored {
                         if self.board[neighbor.x as usize][neighbor.y as usize] == color {
                             queue.push_front(neighbor);
@@ -344,8 +343,8 @@ impl Board {
     }
 
     #[allow(unused)]
-    pub fn random_board(size: usize, nb_moves: usize) -> Board {
-        let mut board = Board::new(size);
+    pub fn random_board(nb_moves: usize) -> Board2<SIZE> {
+        let mut board = Board2::new();
         let mut color = Color::Black;
 
         for _ in 0..nb_moves {
@@ -398,16 +397,53 @@ impl Board {
     }
 }
 
-impl fmt::Display for Board {
+impl<const SIZE: usize> fmt::Display for Board2<SIZE> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write_column_labels(f, self.size(), 0)?;
+        write_column_labels(f, SIZE, 0)?;
 
-        for row in 0..self.size() {
+        for row in 0..SIZE {
             write_row(f, self, row)?;
         }
 
-        write_column_labels(f, self.size(), self.size() + 1)
+        write_column_labels(f, SIZE, SIZE + 1)
     }
+}
+
+pub fn write_column_labels(
+    f: &mut fmt::Formatter,
+    board_size: usize,
+    indent: usize,
+) -> fmt::Result {
+    write_indent(f, indent)?;
+    write!(f, " ")?;
+
+    for column in 0..board_size {
+        write!(f, " {} ", column + 1)?;
+    }
+
+    writeln!(f)
+}
+
+pub fn write_row<const SIZE: usize>(
+    f: &mut fmt::Formatter,
+    board: &Board2<SIZE>,
+    row: usize,
+) -> fmt::Result {
+    write_indent(f, row)?;
+    write!(f, "{:2}\\", row + 1)?;
+
+    for column in 0..board.size() {
+        if column > 0 {
+            write!(f, "  ")?;
+        }
+        write!(f, "{}", board.get_board()[row][column].to_char())?;
+    }
+
+    writeln!(f, "\\{:2}", row + 1)
+}
+
+pub fn write_indent(f: &mut fmt::Formatter, length: usize) -> fmt::Result {
+    write!(f, "{}", " ".repeat(length))
 }
 
 //test
@@ -417,7 +453,7 @@ mod tests {
 
     #[test]
     fn test_board() {
-        let mut board = Board::new(2);
+        let mut board = Board2::<2>::new();
         board.set(0, 0, Color::White);
         board.set(0, 1, Color::Black);
         board.set(1, 0, Color::Black);
@@ -431,7 +467,7 @@ mod tests {
 
     #[test]
     fn is_game_over() {
-        let board = Board::new(4);
+        let board = Board2::<4>::new();
         println!("{}", board);
         println!("{:?}", board.missing_move_to_win(Color::White));
 
@@ -440,7 +476,7 @@ mod tests {
 
     #[test]
     fn first_possible_move() {
-        let mut board = Board::new(2);
+        let mut board = Board2::<2>::new();
         board.set(0, 0, Color::Black);
 
         assert_eq!(board.first_possible_move().unwrap(), (0, 1));
@@ -448,21 +484,22 @@ mod tests {
 
     #[test]
     fn is_game_over1() {
-        let mut board = Board::new(4);
+        let mut board = Board2::<4>::new();
         board.set(3, 0, Color::White);
         board.set(3, 1, Color::White);
         board.set(2, 2, Color::White);
         board.set(1, 2, Color::White);
         board.set(0, 3, Color::White);
-        println!("{}", board);
-        println!("{:?}", board.missing_move_to_win(Color::White));
+
+        dbg!(&board);
+        dbg!(board.missing_move_to_win(Color::White));
 
         assert!(board.is_win(Color::White));
     }
 
     #[test]
     fn is_game_over2() {
-        let mut board = Board::new(4);
+        let mut board = Board2::<4>::new();
         board.set(3, 0, Color::White);
         board.set(3, 1, Color::White);
         board.set(2, 2, Color::White);
@@ -475,13 +512,13 @@ mod tests {
 
     #[test]
     fn missing_moves() {
-        let board = Board::new(4);
+        let board = Board2::<4>::new();
         println!("{}", board);
 
         assert_eq!(board.missing_move_to_win(Color::White), Some(4));
         assert_eq!(board.missing_move_to_win(Color::Black), Some(4));
 
-        let mut board = Board::new(4);
+        let mut board = Board2::<4>::new();
         board.set(3, 0, Color::White);
         board.set(3, 1, Color::White);
         println!("{}", board);
@@ -492,7 +529,7 @@ mod tests {
 
     #[test]
     fn reach_test() {
-        let board = Board::new(11);
+        let board = Board2::<11>::new();
         //board.set(3, 0, Color::White);
         //board.set(3, 1, Color::White);
         println!("{}", board);
@@ -510,7 +547,7 @@ mod tests {
 
     #[test]
     fn reach_test2() {
-        let mut board = Board::new(11);
+        let mut board = Board2::<11>::new();
         board.set(3, 0, Color::White);
         board.set(3, 1, Color::White);
         board.set(2, 2, Color::White);
@@ -545,7 +582,7 @@ mod tests {
 
     #[test]
     fn dist_matrix() {
-        let mut board = Board::new(2);
+        let mut board = Board2::<2>::new();
         board.set(0, 0, Color::White);
 
         let dist_matrix_white = board.get_dist_matrix(Color::White);
@@ -569,7 +606,7 @@ mod tests {
 
     #[test]
     fn missing_moves_to_win2() {
-        let mut board = Board::new(4);
+        let mut board = Board2::<4>::new();
 
         assert_eq!(board.missing_move_to_win2(Color::White), Some(4));
         assert_eq!(board.missing_move_to_win2(Color::Black), Some(4));
@@ -586,7 +623,7 @@ mod tests {
     #[test]
     fn perf_missing_moves() {
         let n = 1000;
-        let boards: Vec<_> = (0..n).map(|_| Board::random_board(11, 20)).collect();
+        let boards: Vec<_> = (0..n).map(|_| Board2::<11>::random_board(20)).collect();
 
         let start = Instant::now();
         let result1: usize = boards
@@ -614,7 +651,7 @@ mod tests {
 
     #[test]
     fn possible_moves() {
-        let mut board = Board::new(2);
+        let mut board = Board2::<2>::new();
         board.set(0, 0, Color::White);
         println!("{}", board);
 
@@ -625,7 +662,7 @@ mod tests {
     fn random_board_path() {
         let start = std::time::Instant::now();
         for _ in 0..10000 {
-            let board = Board::random_board(3, 10);
+            let board = Board2::<3>::random_board(10);
 
             // println!("{}", board);
             let _possible_winner = board.winner();

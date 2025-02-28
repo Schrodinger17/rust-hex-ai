@@ -16,9 +16,9 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(board_size: usize, players: HashMap<Color, Rc<Player>>) -> Game {
+    pub fn new(players: HashMap<Color, Rc<Player>>) -> Game {
         Game {
-            board: Board::new(board_size),
+            board: Board::new(),
             players,
             turn: Color::White,
             duration: None,

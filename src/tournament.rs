@@ -29,7 +29,7 @@ impl Tournament {
         self.players = players;
     }
 
-    pub fn create_games(&mut self, board_size: usize, nb_games: usize) {
+    pub fn create_games(&mut self, nb_games: usize) {
         self.nb_games = nb_games;
         for player1 in self.players.iter() {
             for player2 in self.players.iter() {
@@ -38,7 +38,7 @@ impl Tournament {
                     players.insert(Color::White, player1.clone());
                     players.insert(Color::Black, player2.clone());
 
-                    let mut game = Game::new(board_size, players);
+                    let mut game = Game::new(players);
                     game.set_log_level(self.log_level.clone());
                     self.games.push(game);
                 }

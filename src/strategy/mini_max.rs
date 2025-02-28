@@ -141,7 +141,7 @@ impl MiniMax {
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
+    use crate::{board::Board2, *};
 
     use super::*;
 
@@ -149,7 +149,7 @@ mod tests {
     #[test]
     fn test_mini_max() {
         let minimax = MiniMax::new(Rc::new(Evaluation1::new()), 9, Rc::default());
-        let mut board = Board::new(4);
+        let mut board = Board::new();
         //board.set(0, 0, Color::White);
         //board.set(1, 0, Color::White);
         //board.set(1, 1, Color::White);

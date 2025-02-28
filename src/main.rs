@@ -65,7 +65,7 @@ fn main() {
         )),
     );
 
-    let mut hex = Game::new(11, players);
+    let mut hex = Game::new(players);
     hex.set_duration(duration);
     hex.set_log_level(log_level);
     hex.play();
