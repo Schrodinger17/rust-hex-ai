@@ -15,12 +15,12 @@ impl Strategy for Random {
         _color: Color,
         _duration: Option<Duration>,
     ) -> (usize, usize) {
-        let mut rng = rand::thread_rng();
-        let mut x = rng.gen_range(0..board.size());
-        let mut y = rng.gen_range(0..board.size());
+        let mut rng = rand::rng();
+        let mut x = rng.random_range(0..board.size());
+        let mut y = rng.random_range(0..board.size());
         while !board.is_valid(x, y) {
-            x = rng.gen_range(0..board.size());
-            y = rng.gen_range(0..board.size());
+            x = rng.random_range(0..board.size());
+            y = rng.random_range(0..board.size());
         }
         (x, y)
     }

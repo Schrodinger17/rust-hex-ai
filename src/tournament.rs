@@ -1,7 +1,5 @@
 use std::{collections::HashMap, rc::Rc};
 
-use random::default;
-
 use crate::{
     color::Color,
     game::Game,

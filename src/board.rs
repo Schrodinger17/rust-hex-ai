@@ -336,8 +336,8 @@ impl<const SIZE: usize> Board2<SIZE> {
             return;
         }
 
-        let mut rng = rand::thread_rng();
-        let index = rng.gen_range(0..possible_moves.len());
+        let mut rng = rand::rng();
+        let index = rng.random_range(0..possible_moves.len());
         let (x, y) = possible_moves[index];
         self.set(x, y, color);
     }
