@@ -72,15 +72,17 @@ impl From<Score> for f64 {
 
 impl From<f64> for Score {
     fn from(score: f64) -> Score {
-        let max: f64 = 1000.0; //f64::MAX;
-        let min: f64 = -1000.0; //f64::MIN;
         let threshold: f64 = 50.0;
 
         match score {
-            score if score >= max => Score::WhiteCheckMate,
-            score if score <= min => Score::BlackCheckMate,
-            score if score > max - threshold => Score::WhiteMateIn((max - score) as usize),
-            score if score < min + threshold => Score::BlackMateIn((score - min) as usize),
+            score if score >= Score::MAX => Score::WhiteCheckMate,
+            score if score <= Score::MIN => Score::BlackCheckMate,
+            score if score > Score::MAX - threshold => {
+                Score::WhiteMateIn((Score::MAX - score) as usize)
+            }
+            score if score < Score::MIN + threshold => {
+                Score::BlackMateIn((score - Score::MIN) as usize)
+            }
             score if score > 0.0 => Score::Advantage(score),
             score if score < 0.0 => Score::Advantage(score),
             score if score == 0.0 => Score::Advantage(score),

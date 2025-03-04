@@ -1,6 +1,6 @@
 use std::{rc::Rc, time::Duration};
 
-use crate::{board::Board, color::Color, log::LogLevel, strategy::Strategy};
+use crate::{board::Board, color::Color, strategy::Strategy};
 
 pub struct Player {
     #[allow(unused)]
@@ -10,6 +10,7 @@ pub struct Player {
 }
 
 impl Player {
+    #[allow(unused)]
     pub fn new(name: String, strategy: Rc<dyn Strategy>, time_by_move: Option<Duration>) -> Player {
         Player {
             name,

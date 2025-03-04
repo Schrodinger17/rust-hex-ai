@@ -4,7 +4,6 @@ mod best_list;
 mod board;
 mod cell;
 mod color;
-mod display;
 mod distance;
 mod evaluation;
 mod game;

@@ -1,6 +1,6 @@
-use std::{rc::Rc, time::Duration};
+use std::time::Duration;
 
-use crate::{board::Board, color::Color, log::LogLevel};
+use crate::{board::Board, color::Color};
 
 use super::Strategy;
 

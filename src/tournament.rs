@@ -83,14 +83,3 @@ impl Tournament {
         println!();
     }
 }
-
-//test
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test() {
-        for id in 0..4 {
-            println!("{} {} {}", id, id / 2, id % 2);
-        }
-    }
-}

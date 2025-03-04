@@ -4,7 +4,7 @@ use crate::{
     board::Board,
     color::Color,
     evaluation::Evaluation,
-    log::{self, LogFlag, LogLevel},
+    log::{LogFlag, LogLevel},
     score::Score,
 };
 
@@ -210,7 +210,7 @@ impl AlphaBeta {
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
+    use crate::evaluation::Evaluation1;
 
     use super::*;
 

@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 mod alpha_beta;
 mod alpha_beta_2;
 mod alpha_beta_3;
@@ -15,9 +16,9 @@ pub use mcts::MCTS;
 pub use mini_max::MiniMax;
 pub use random::Random;
 
-use crate::{board::Board, color::Color, log::LogLevel};
+use crate::{board::Board, color::Color};
 
-use std::{rc::Rc, time::Duration};
+use std::time::Duration;
 
 pub trait Strategy {
     fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize);

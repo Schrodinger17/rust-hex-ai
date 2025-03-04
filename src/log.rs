@@ -16,6 +16,7 @@ pub struct LogLevel {
 }
 
 impl LogLevel {
+    #[allow(unused)]
     pub fn new() -> LogLevel {
         LogLevel::default()
     }

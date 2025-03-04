@@ -25,6 +25,12 @@ impl Evaluation1 {
     }
 }
 
+impl Default for Evaluation1 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 //test
 #[cfg(test)]
 

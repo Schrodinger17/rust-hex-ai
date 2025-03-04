@@ -8,7 +8,7 @@ use crate::cell::Cell;
 use crate::color::Color;
 use crate::distance::Distance;
 
-pub type Board = Board2<7>;
+pub type Board = Board2<11>;
 
 #[allow(unused)]
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
@@ -394,6 +394,12 @@ impl<const SIZE: usize> Board2<SIZE> {
     #[allow(unused)]
     pub fn is_finished(&self) -> bool {
         self.is_win(Color::Black) || self.is_win(Color::White) || self.is_full()
+    }
+}
+
+impl<const SIZE: usize> Default for Board2<SIZE> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

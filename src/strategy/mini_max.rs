@@ -141,7 +141,7 @@ impl MiniMax {
 
 #[cfg(test)]
 mod tests {
-    use crate::{board::Board2, *};
+    use crate::evaluation::Evaluation1;
 
     use super::*;
 
