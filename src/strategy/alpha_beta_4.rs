@@ -31,11 +31,7 @@ impl Strategy for AlphaBeta4 {
                     best_move = self.alpha_beta(board, color, depth, duration);
                 }
                 if self.log_level.is(LogFlag::SearchDepth) {
-                    println!(
-                        "Depth: {} in {:?}",
-                        depth,
-                        time.elapsed()
-                    );
+                    println!("Depth: {} in {:?}", depth, time.elapsed());
                 }
                 best_move
             }

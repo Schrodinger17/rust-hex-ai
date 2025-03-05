@@ -45,7 +45,7 @@ fn main() {
         Rc::new(Player::new(
             "AlphaBeta_4".to_string(),
             Rc::new(AlphaBeta4::new(
-                Rc::new(Evaluation1::new()),
+                Rc::new(Evaluation3::new()),
                 20,
                 log_level.clone(),
             )),
@@ -53,12 +53,23 @@ fn main() {
         )),
     );
 
+    /*
+    players.insert(
+        Color::Black,
+        Rc::new(Player::new(
+            "AlphaBeta_4".to_string(),
+            Rc::new(Human::new("Me".to_string())),
+            Some(duration),
+        )),
+    );
+    */
+
     players.insert(
         Color::White,
         Rc::new(Player::new(
             "AlphaBeta_4".to_string(),
             Rc::new(AlphaBeta4::new(
-                Rc::new(Evaluation2::new()),
+                Rc::new(Evaluation3::new()),
                 20,
                 log_level.clone(),
             )),

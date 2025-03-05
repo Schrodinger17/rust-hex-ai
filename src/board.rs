@@ -47,6 +47,24 @@ impl<const SIZE: usize> Board<SIZE> {
         self.board[x][y] == Color::None
     }
 
+    pub fn next_player(&self) -> Color {
+        let sum = self
+            .board
+            .iter()
+            .flatten()
+            .map(|c| match c {
+                Color::Black => 1,
+                Color::White => -1,
+                Color::None => 0,
+            })
+            .sum();
+
+        match sum {
+            0 | 1 => Color::White,
+            _ => Color::Black,
+        }
+    }
+
     fn reach(
         &self,
         player: Color,
