@@ -34,7 +34,7 @@ impl Strategy for AlphaBeta {
                     println!(
                         "Depth: {} in {:?}",
                         depth,
-                        Duration::from_millis(time.elapsed().as_millis() as u64)
+                        time.elapsed()
                     );
                 }
                 best_move

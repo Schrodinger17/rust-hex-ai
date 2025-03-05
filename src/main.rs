@@ -33,6 +33,7 @@ fn main() {
             .add(LogFlag::GameResult)
             .add(LogFlag::Position)
             .add(LogFlag::SearchDepth)
+            .add(LogFlag::Moves)
             .to_owned(),
     );
 

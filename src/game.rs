@@ -69,13 +69,10 @@ impl Game {
         loop {
             let player = self.players.get(&self.turn).unwrap();
 
-            // Clone the board before passing it to next_move
-            let cloned_board = self.board.clone();
-
             // Time
             let start = Instant::now();
 
-            let (x, y) = player.next_move(&cloned_board, self.turn);
+            let (x, y) = player.next_move(&self.board, self.turn);
 
             // Time
             let duration = start.elapsed();
@@ -96,7 +93,7 @@ impl Game {
                 println!("{}", self.board);
             }
 
-            if self.board.is_win(self.turn) || self.board.is_full() {
+            if self.board.is_win(self.turn) {
                 self.winner = self.turn;
                 if self.log_level.is(LogFlag::GameResult) {
                     println!("{} wins!", self.winner);
