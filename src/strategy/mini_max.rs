@@ -18,17 +18,17 @@ pub struct MiniMax {
 }
 
 impl Strategy for MiniMax {
-    fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
+    fn next_move(&self, board: &Board, duration: Option<Duration>) -> (usize, usize) {
         // update duration if it's not None
         match duration {
-            None => self.minimax(board, color, self.max_depth, duration),
+            None => self.minimax(board, self.max_depth, duration),
             Some(duration_unwrapped) => {
                 let time = std::time::Instant::now();
                 let mut depth = 1;
-                let mut best_move = self.minimax(board, color, depth, duration);
+                let mut best_move = self.minimax(board, depth, duration);
                 while time.elapsed() < duration_unwrapped && depth < self.max_depth {
                     depth += 1;
-                    best_move = self.minimax(board, color, depth, duration);
+                    best_move = self.minimax(board, depth, duration);
                 }
                 if self.log_level.is(LogFlag::SearchDepth) {
                     println!("Depth: {} in {:?}", depth, time.elapsed());
@@ -58,15 +58,14 @@ impl MiniMax {
         self.max_depth = max_depth;
     }
 
-    fn minimax(
-        &self,
-        board: &Board,
-        color: Color,
-        depth: usize,
-        duration: Option<Duration>,
-    ) -> (usize, usize) {
-        match self._minimax(board, color, depth, duration) {
-            (_, Some((x, y))) => (x, y),
+    fn minimax(&self, board: &Board, depth: usize, duration: Option<Duration>) -> (usize, usize) {
+        match self._minimax(board, depth, duration) {
+            (score, Some((x, y))) => {
+                if self.log_level.is(LogFlag::Score) {
+                    println!("Score: {} with depth {}", score, depth);
+                }
+                (x, y)
+            }
             _ => panic!("Error in minimax"),
         }
     }
@@ -74,12 +73,11 @@ impl MiniMax {
     fn _minimax(
         &self,
         board: &Board,
-        color: Color,
         depth: usize,
         duration: Option<Duration>,
     ) -> (Score, Option<(usize, usize)>) {
-        if board.is_win(color.opponent()) {
-            return (color.opponent().win_score(), None);
+        if let Some(winner) = board.winner() {
+            return (winner.win_score(), None);
         }
 
         if depth == 0 {
@@ -92,16 +90,16 @@ impl MiniMax {
             }
         }
 
-        let mut best_score = color.opponent().win_score();
+        let mut best_score = board.next_color().opponent().win_score();
         let mut best_move = board.first_possible_move().unwrap();
 
         let mut best_moves: Vec<(Score, (usize, usize))> = Vec::new();
 
         for (x, y) in board.possible_moves() {
             let mut new_board = board.clone();
-            new_board.set(x, y, color);
-            let (score, _) = self._minimax(&new_board, color.opponent(), depth - 1, duration);
-            if (color == Color::White && score > best_score) || score < best_score {
+            new_board.play(x, y);
+            let (score, _) = self._minimax(&new_board, depth - 1, duration);
+            if (board.next_color() == Color::White && score > best_score) || score < best_score {
                 best_score = score;
                 best_move = (x, y);
             }
@@ -143,16 +141,16 @@ mod tests {
 
     #[ignore]
     #[test]
-    fn test_mini_max() {
-        let minimax = MiniMax::new(Rc::new(Evaluation1::new()), 9, Rc::default());
+    fn mini_max() {
+        let player = MiniMax::new(Rc::new(Evaluation1::new()), 5, Rc::default());
         let mut board = Board::new();
-        //board.set(0, 0, Color::White);
-        //board.set(1, 0, Color::White);
-        //board.set(1, 1, Color::White);
-        board.set(1, 1, Color::Black);
+        board.play(0, 0);
+        board.play(1, 0);
+        board.play(1, 1);
+        board.play(1, 1);
 
         println!("{}", board);
-        let best_move = minimax.next_move(&board, Color::White, None);
+        let best_move = player.next_move(&board, None);
         println!("{:?}", best_move);
     }
 }

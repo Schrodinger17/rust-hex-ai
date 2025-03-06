@@ -9,12 +9,7 @@ use super::Strategy;
 pub struct Random;
 
 impl Strategy for Random {
-    fn next_move(
-        &self,
-        board: &Board,
-        _color: Color,
-        _duration: Option<Duration>,
-    ) -> (usize, usize) {
+    fn next_move(&self, board: &Board, _duration: Option<Duration>) -> (usize, usize) {
         let mut rng = rand::rng();
         let mut x = rng.random_range(0..board.size());
         let mut y = rng.random_range(0..board.size());

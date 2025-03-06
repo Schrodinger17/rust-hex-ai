@@ -53,7 +53,7 @@ impl Tournament {
             let cell_id = id / self.nb_games;
 
             self.games[id].play();
-            if self.games[id].winner() == Color::White {
+            if self.games[id].winner() == Some(Color::White) {
                 self.results[cell_id / n][cell_id % n] += 1
             }
 

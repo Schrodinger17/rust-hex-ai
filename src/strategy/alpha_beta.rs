@@ -18,17 +18,17 @@ pub struct AlphaBeta {
 }
 
 impl Strategy for AlphaBeta {
-    fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
+    fn next_move(&self, board: &Board, duration: Option<Duration>) -> (usize, usize) {
         // update duration if it's not None
         match duration {
-            None => self.alpha_beta(board, color, self.max_depth, duration),
+            None => self.alpha_beta(board, self.max_depth, duration),
             Some(duration_unwrapped) => {
                 let time = std::time::Instant::now();
                 let mut depth = 1;
-                let mut best_move = self.alpha_beta(board, color, depth, duration);
+                let mut best_move = self.alpha_beta(board, depth, duration);
                 while time.elapsed() < duration_unwrapped && depth < self.max_depth {
                     depth += 1;
-                    best_move = self.alpha_beta(board, color, depth, duration);
+                    best_move = self.alpha_beta(board, depth, duration);
                 }
                 if self.log_level.is(LogFlag::SearchDepth) {
                     println!("Depth: {} in {:?}", depth, time.elapsed());
@@ -61,19 +61,22 @@ impl AlphaBeta {
     fn alpha_beta(
         &self,
         board: &Board,
-        color: Color,
         depth: usize,
         duration: Option<Duration>,
     ) -> (usize, usize) {
         match self._alpha_beta(
             board,
-            color,
             depth,
             Score::BlackCheckMate,
             Score::WhiteCheckMate,
             duration,
         ) {
-            (_, Some((x, y))) => (x, y),
+            (score, Some((x, y))) => {
+                if self.log_level.is(LogFlag::Score) {
+                    println!("Score: {} with depth {}", score, depth);
+                }
+                (x, y)
+            }
             _ => panic!("Error in alpha_beta"),
         }
     }
@@ -81,7 +84,6 @@ impl AlphaBeta {
     fn _alpha_beta(
         &self,
         board: &Board,
-        color: Color,
         depth: usize,
         alpha: Score,
         beta: Score,
@@ -92,10 +94,8 @@ impl AlphaBeta {
 
         let mut best_moves: Vec<(Score, (usize, usize))> = Vec::new();
 
-        if board.is_win(color) {
-            return (color.win_score(), None);
-        } else if board.is_win(color.opponent()) {
-            return (color.opponent().win_score(), None);
+        if let Some(winner) = board.winner() {
+            return (winner.win_score(), None);
         }
 
         if depth == 0 {
@@ -112,20 +112,13 @@ impl AlphaBeta {
         let mut best_move = board.first_possible_move().unwrap();
         let possible_moves = board.possible_moves();
 
-        if color == Color::White {
+        if board.next_color() == Color::White {
             value = Score::BlackCheckMate;
             for (x, y) in possible_moves {
                 let mut new_board = board.clone();
-                new_board.set(x, y, color);
+                new_board.play(x, y);
 
-                let (score, _) = self._alpha_beta(
-                    &new_board,
-                    color.opponent(),
-                    depth - 1,
-                    alpha,
-                    beta,
-                    duration,
-                );
+                let (score, _) = self._alpha_beta(&new_board, depth - 1, alpha, beta, duration);
 
                 best_moves.push((score, (x, y)));
 
@@ -150,15 +143,8 @@ impl AlphaBeta {
             value = Score::WhiteCheckMate;
             for (x, y) in possible_moves {
                 let mut new_board = board.clone();
-                new_board.set(x, y, color);
-                let (score, _) = self._alpha_beta(
-                    &new_board,
-                    color.opponent(),
-                    depth - 1,
-                    alpha,
-                    beta,
-                    duration,
-                );
+                new_board.play(x, y);
+                let (score, _) = self._alpha_beta(&new_board, depth - 1, alpha, beta, duration);
 
                 best_moves.push((score, (x, y)));
 
@@ -182,7 +168,7 @@ impl AlphaBeta {
         }
 
         let move_cmp = |a: &(Score, _), b: &(Score, _)| {
-            if color == Color::White {
+            if board.next_color() == Color::White {
                 PartialOrd::partial_cmp(&b.0, &a.0).unwrap()
                 //b.0.partial_cmp(&a.0).unwrap()
             } else {
@@ -212,16 +198,16 @@ mod tests {
 
     #[ignore]
     #[test]
-    fn test_mini_max() {
-        let minimax = AlphaBeta::new(Rc::new(Evaluation1::new()), 7, Rc::default());
+    fn alpha_beta() {
+        let player = AlphaBeta::new(Rc::new(Evaluation1::new()), 5, Rc::default());
         let mut board = Board::new();
-        //board.set(0, 0, Color::White);
-        //board.set(1, 0, Color::White);
-        //board.set(1, 1, Color::White);
-        board.set(1, 1, Color::Black);
+        board.play(0, 0);
+        board.play(1, 0);
+        board.play(1, 1);
+        board.play(1, 1);
 
         println!("{}", board);
-        let best_move = minimax.next_move(&board, Color::White, None);
+        let best_move = player.next_move(&board, None);
         println!("{:?}", best_move);
     }
 }

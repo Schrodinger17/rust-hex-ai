@@ -21,5 +21,5 @@ use crate::{board::Board, color::Color};
 use std::time::Duration;
 
 pub trait Strategy {
-    fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize);
+    fn next_move(&self, board: &Board, duration: Option<Duration>) -> (usize, usize);
 }

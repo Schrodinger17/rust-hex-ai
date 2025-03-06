@@ -13,7 +13,7 @@ impl Evaluation for Evaluation3 {
             (None, _) => Score::WhiteCheckMate,
             (_, None) => Score::BlackCheckMate,
             (Some(missing_move_to_win_black), Some(missing_move_to_win_white)) => {
-                match board.next_player() {
+                match board.next_color() {
                     Color::Black => Score::Advantage(
                         missing_move_to_win_black as f64 - 2.0 * missing_move_to_win_white as f64,
                     ),

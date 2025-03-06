@@ -4,6 +4,7 @@ use std::collections::HashSet;
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub enum LogFlag {
     SearchDepth,
+    Score,
     Moves,
     Position,
     GameResult,

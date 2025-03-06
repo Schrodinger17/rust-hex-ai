@@ -18,17 +18,17 @@ pub struct AlphaBeta3 {
 }
 
 impl Strategy for AlphaBeta3 {
-    fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
+    fn next_move(&self, board: &Board, duration: Option<Duration>) -> (usize, usize) {
         // update duration if it's not None
         match duration {
-            None => self.alpha_beta(board, color, self.max_depth, duration),
+            None => self.alpha_beta(board, self.max_depth, duration),
             Some(duration_unwrapped) => {
                 let time = std::time::Instant::now();
                 let mut depth = 1;
-                let mut best_move = self.alpha_beta(board, color, depth, duration);
+                let mut best_move = self.alpha_beta(board, depth, duration);
                 while time.elapsed() < duration_unwrapped && depth < self.max_depth {
                     depth += 1;
-                    best_move = self.alpha_beta(board, color, depth, duration);
+                    best_move = self.alpha_beta(board, depth, duration);
                 }
                 if self.log_level.is(LogFlag::SearchDepth) {
                     println!("Depth: {} in {:?}", depth, time.elapsed());
@@ -61,22 +61,18 @@ impl AlphaBeta3 {
     fn alpha_beta(
         &self,
         board: &Board,
-        color: Color,
         depth: usize,
         duration: Option<Duration>,
     ) -> (usize, usize) {
         #[allow(unused_mut)]
         let mut score_dict = HashMap::new();
-        match self._alpha_beta(
-            board,
-            color,
-            depth,
-            f64::MIN,
-            f64::MAX,
-            duration,
-            &mut score_dict,
-        ) {
-            (_, Some((x, y))) => (x, y),
+        match self._alpha_beta(board, depth, f64::MIN, f64::MAX, duration, &mut score_dict) {
+            (score, Some((x, y))) => {
+                if self.log_level.is(LogFlag::Score) {
+                    println!("Score: {} with depth {}", score, depth);
+                }
+                (x, y)
+            }
             _ => panic!("Error in alpha_beta"),
         }
     }
@@ -92,7 +88,6 @@ impl AlphaBeta3 {
     fn possible_moves_sorted(
         &self,
         board: &Board,
-        color: Color,
         score_dict: &mut HashMap<Board, Score>,
     ) -> Vec<(usize, usize)> {
         let mut s_moves = board
@@ -100,7 +95,7 @@ impl AlphaBeta3 {
             .iter()
             .map(|(x, y)| {
                 let mut board = board.clone();
-                board.set(*x, *y, color);
+                board.play(*x, *y);
                 let score = self.get_score(&board, score_dict);
                 //println!("{} {} {}", x+1, y+1, score);
                 ((*x, *y), score)
@@ -109,7 +104,7 @@ impl AlphaBeta3 {
 
         s_moves.sort_by(|(_, score_a), (_, score_b)| score_a.partial_cmp(score_b).unwrap());
 
-        if let Color::White = color {
+        if let Color::White = board.next_color() {
             s_moves.reverse();
         }
 
@@ -135,7 +130,6 @@ impl AlphaBeta3 {
     fn _alpha_beta(
         &self,
         board: &Board,
-        color: Color,
         depth: usize,
         alpha: f64,
         beta: f64,
@@ -145,10 +139,8 @@ impl AlphaBeta3 {
         let mut alpha = alpha;
         let mut beta = beta;
 
-        if board.is_win(color) {
-            return (color.win_score(), None);
-        } else if board.is_win(color.opponent()) {
-            return (color.opponent().win_score(), None);
+        if let Some(winner) = board.winner() {
+            return (winner.win_score(), None);
         }
 
         if depth == 0 {
@@ -163,29 +155,21 @@ impl AlphaBeta3 {
 
         let mut value: f64;
         let mut best_move = board.first_possible_move().unwrap();
-        let mut possible_moves = self.possible_moves_sorted(board, color, score_dict);
+        let mut possible_moves = self.possible_moves_sorted(board, score_dict);
 
         possible_moves = self.keep_bests_moves(board, possible_moves);
 
-        if color == Color::White {
+        if board.next_color() == Color::White {
             value = f64::MIN;
             for (x, y) in possible_moves {
                 let mut new_board = board.clone();
-                new_board.set(x, y, color);
+                new_board.play(x, y);
 
                 let score = match score_dict.get(&new_board) {
                     Some(score) => *score,
                     None => {
-                        self._alpha_beta(
-                            &new_board,
-                            color.opponent(),
-                            depth - 1,
-                            alpha,
-                            beta,
-                            duration,
-                            score_dict,
-                        )
-                        .0
+                        self._alpha_beta(&new_board, depth - 1, alpha, beta, duration, score_dict)
+                            .0
                     }
                 };
 
@@ -211,21 +195,13 @@ impl AlphaBeta3 {
             value = f64::MAX;
             for (x, y) in possible_moves {
                 let mut new_board = board.clone();
-                new_board.set(x, y, color);
+                new_board.play(x, y);
 
                 let score = match score_dict.get(&new_board) {
                     Some(score) => *score,
                     None => {
-                        self._alpha_beta(
-                            &new_board,
-                            color.opponent(),
-                            depth - 1,
-                            alpha,
-                            beta,
-                            duration,
-                            score_dict,
-                        )
-                        .0
+                        self._alpha_beta(&new_board, depth - 1, alpha, beta, duration, score_dict)
+                            .0
                     }
                 };
 
@@ -258,5 +234,27 @@ impl AlphaBeta3 {
             Score::Advantage(value).next_back().unwrap(),
             Some(best_move),
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::evaluation::Evaluation1;
+
+    use super::*;
+
+    #[ignore]
+    #[test]
+    fn alpha_beta_3() {
+        let player = AlphaBeta3::new(Rc::new(Evaluation1::new()), 5, Rc::default());
+        let mut board = Board::new();
+        board.play(0, 0);
+        board.play(1, 0);
+        board.play(1, 1);
+        board.play(1, 1);
+
+        println!("{}", board);
+        let best_move = player.next_move(&board, None);
+        println!("{:?}", best_move);
     }
 }

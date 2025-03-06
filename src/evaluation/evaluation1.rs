@@ -37,33 +37,32 @@ impl Default for Evaluation1 {
 mod tests {
     use super::*;
     use crate::board::Board;
-    use crate::color::Color;
 
     #[test]
-    #[ignore]
+    #[ignore = "FIXME"]
     fn test_evaluation1() {
         let board = Board::new();
         let evaluation = Evaluation1::new();
         assert_eq!(evaluation.score(&board), Score::Advantage(0.0));
 
         let mut board = Board::new();
-        board.set(0, 0, Color::Black);
+        board.play(0, 0);
         assert_eq!(evaluation.score(&board), Score::Advantage(-1.0));
 
         let mut board = Board::new();
-        board.set(0, 0, Color::White);
+        board.play(0, 0);
         assert_eq!(evaluation.score(&board), Score::Advantage(1.0));
 
         let mut board = Board::new();
-        board.set(0, 0, Color::Black);
-        board.set(1, 0, Color::Black);
-        board.set(2, 0, Color::Black);
+        board.play(0, 0);
+        board.play(1, 0);
+        board.play(2, 0);
         assert_eq!(evaluation.score(&board), Score::BlackCheckMate);
 
         let mut board = Board::new();
-        board.set(0, 0, Color::White);
-        board.set(0, 1, Color::White);
-        board.set(0, 2, Color::White);
+        board.play(0, 0);
+        board.play(0, 1);
+        board.play(0, 2);
         assert_eq!(evaluation.score(&board), Score::WhiteCheckMate);
     }
 }

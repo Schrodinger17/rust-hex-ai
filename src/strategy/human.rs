@@ -12,8 +12,8 @@ pub struct Human {
 
 impl Strategy for Human {
     #[allow(unused_variables)]
-    fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
-        Human::ask_coord(color, board)
+    fn next_move(&self, board: &Board, duration: Option<Duration>) -> (usize, usize) {
+        Human::ask_coord(board)
     }
 }
 
@@ -35,9 +35,9 @@ impl Human {
         None
     }
 
-    fn ask_coord(color: Color, board: &Board) -> (usize, usize) {
+    fn ask_coord(board: &Board) -> (usize, usize) {
         let mut input = String::new();
-        println!("{}'s turn", color);
+        println!("{}'s turn", board.next_color());
         std::io::stdin()
             .read_line(&mut input)
             .expect("Failed to read line");
@@ -47,10 +47,10 @@ impl Human {
                     (x - 1, y - 1)
                 } else {
                     println!("Invalid move, try again ('x y')");
-                    Human::ask_coord(color, board)
+                    Human::ask_coord(board)
                 }
             }
-            None => Human::ask_coord(color, board),
+            None => Human::ask_coord(board),
         }
     }
 }

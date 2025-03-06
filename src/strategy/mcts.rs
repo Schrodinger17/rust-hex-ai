@@ -46,10 +46,10 @@ pub struct MCTS {
 }
 
 impl Strategy for MCTS {
-    fn next_move(&self, board: &Board, color: Color, duration: Option<Duration>) -> (usize, usize) {
+    fn next_move(&self, board: &Board, duration: Option<Duration>) -> (usize, usize) {
         let time_limit = duration.unwrap_or(Duration::from_secs(1)); // Default 1s if not provided
         let mut board_clone = board.clone();
-        self.mcts_search(&mut board_clone, color, time_limit)
+        self.mcts_search(&mut board_clone, time_limit)
     }
 }
 
@@ -63,13 +63,13 @@ impl MCTS {
     }
 
     /// Run MCTS with time constraint
-    fn mcts_search(&self, board: &mut Board, color: Color, duration: Duration) -> (usize, usize) {
+    fn mcts_search(&self, board: &mut Board, duration: Duration) -> (usize, usize) {
         let mut root = MCTSNode::new();
         let start_time = Instant::now();
 
         while start_time.elapsed() < duration {
             let mut temp_board = board.clone();
-            self.simulate_mcts(&mut root, &mut temp_board, color);
+            self.simulate_mcts(&mut root, &mut temp_board);
         }
 
         // Choose the move with the most visits
@@ -79,7 +79,8 @@ impl MCTS {
             .map(|(mv, _)| *mv)
             .unwrap()
     }
-    fn simulate_mcts(&self, node: &mut MCTSNode, board: &mut Board, color: Color) -> Score {
+
+    fn simulate_mcts(&self, node: &mut MCTSNode, board: &mut Board) -> Score {
         // 🔹 Check for terminal state (no moves left)
         let possible_moves = board.possible_moves();
         if possible_moves.is_empty() {
@@ -104,16 +105,14 @@ impl MCTS {
         }
 
         if let Some((x, y)) = best_move {
-            let next_color = color.opponent(); // 🔹 Switch player for simulation!
-
             // Play the move
-            board.set(x, y, color);
+            board.play(x, y);
 
             // Add new child if not present
             let child_node = node.children.entry((x, y)).or_insert_with(MCTSNode::new);
 
             // 🔹 Recursive Simulation (Alternate Players!)
-            let score = -self.simulate_mcts(child_node, board, next_color); // 🔄 Switch turns!
+            let score = -self.simulate_mcts(child_node, board); // 🔄 Switch turns!
 
             // Backpropagation
             child_node.visits += 1;

@@ -16,6 +16,7 @@ pub const DEFAULT_BOARD_SIZE: usize = 7;
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub struct Board<const SIZE: usize = DEFAULT_BOARD_SIZE> {
     board: [[Color; SIZE]; SIZE],
+    next_color: Color,
     winner: Color,
 }
 
@@ -23,6 +24,7 @@ impl<const SIZE: usize> Board<SIZE> {
     pub fn new() -> Board<SIZE> {
         Board {
             board: [[Color::None; SIZE]; SIZE],
+            next_color: Color::White,
             winner: Color::None,
         }
     }
@@ -31,8 +33,9 @@ impl<const SIZE: usize> Board<SIZE> {
         SIZE
     }
 
-    pub fn set(&mut self, x: usize, y: usize, color: Color) {
-        self.board[x][y] = color;
+    pub fn play(&mut self, x: usize, y: usize) {
+        self.board[x][y] = self.next_color;
+        self.next_color = self.next_color.opponent();
     }
 
     pub fn get_board(&self) -> &[[Color; SIZE]; SIZE] {
@@ -47,22 +50,8 @@ impl<const SIZE: usize> Board<SIZE> {
         self.board[x][y] == Color::None
     }
 
-    pub fn next_player(&self) -> Color {
-        let sum = self
-            .board
-            .iter()
-            .flatten()
-            .map(|c| match c {
-                Color::Black => 1,
-                Color::White => -1,
-                Color::None => 0,
-            })
-            .sum();
-
-        match sum {
-            0 | 1 => Color::White,
-            _ => Color::Black,
-        }
+    pub fn next_color(&self) -> Color {
+        self.next_color
     }
 
     fn reach(
@@ -351,7 +340,7 @@ impl<const SIZE: usize> Board<SIZE> {
         }
     }
 
-    pub fn play_random_move(&mut self, color: Color) {
+    pub fn play_random_move(&mut self) {
         let possible_moves = self.possible_moves();
 
         if possible_moves.is_empty() {
@@ -361,7 +350,7 @@ impl<const SIZE: usize> Board<SIZE> {
         let mut rng = rand::rng();
         let index = rng.random_range(0..possible_moves.len());
         let (x, y) = possible_moves[index];
-        self.set(x, y, color);
+        self.play(x, y);
     }
 
     #[allow(unused)]
@@ -370,30 +359,32 @@ impl<const SIZE: usize> Board<SIZE> {
         let mut color = Color::Black;
 
         for _ in 0..nb_moves {
-            board.play_random_move(color);
+            board.play_random_move();
             color = color.opponent();
         }
 
         board
     }
 
-    pub fn is_win(&self, color: Color) -> bool {
-        self.missing_move_to_win2(color) == Some(0)
+    #[allow(unused)]
+    pub fn is_win(&self) -> bool {
+        self.missing_move_to_win2(self.next_color.opponent()) == Some(0)
     }
 
     #[allow(unused)]
     pub fn winner(&self) -> Option<Color> {
         if self.winner != Color::None {
             None
-        } else if self.is_win(Color::Black) {
+        } else if self.missing_move_to_win2(Color::Black) == Some(0) {
             Some(Color::Black)
-        } else if self.is_win(Color::White) {
+        } else if self.missing_move_to_win2(Color::White) == Some(0) {
             Some(Color::White)
         } else {
             None
         }
     }
 
+    #[allow(unused)]
     pub fn is_full(&self) -> bool {
         self.first_possible_move().is_none()
     }
@@ -417,7 +408,7 @@ impl<const SIZE: usize> Board<SIZE> {
 
     #[allow(unused)]
     pub fn is_finished(&self) -> bool {
-        self.is_win(Color::Black) || self.is_win(Color::White) || self.is_full()
+        !self.winner().is_none()
     }
 }
 
@@ -484,30 +475,27 @@ mod tests {
     #[test]
     fn test_board() {
         let mut board = Board::<2>::new();
-        board.set(0, 0, Color::White);
-        board.set(0, 1, Color::Black);
-        board.set(1, 0, Color::Black);
-        board.set(1, 1, Color::White);
-        //println!("{}", board.is_win(Color::White));
-        //println!("{}", board.is_win(Color::Black));
-        assert!(!board.is_win(Color::White));
-        assert!(board.is_win(Color::Black));
+        board.play(0, 0);
+        board.play(0, 1);
+        board.play(1, 1);
+        board.play(1, 0);
+
+        assert!(board.is_win());
         assert!(board.is_full());
     }
 
     #[test]
     fn is_game_over() {
         let board = Board::<4>::new();
-        println!("{}", board);
-        println!("{:?}", board.missing_move_to_win(Color::White));
+        assert_eq!(board.missing_move_to_win(Color::White), Some(4));
 
-        assert!(!board.is_win(Color::White));
+        assert!(!board.is_win());
     }
 
     #[test]
     fn first_possible_move() {
         let mut board = Board::<2>::new();
-        board.set(0, 0, Color::Black);
+        board.play(0, 0);
 
         assert_eq!(board.first_possible_move().unwrap(), (0, 1));
     }
@@ -515,105 +503,57 @@ mod tests {
     #[test]
     fn is_game_over1() {
         let mut board = Board::<4>::new();
-        board.set(3, 0, Color::White);
-        board.set(3, 1, Color::White);
-        board.set(2, 2, Color::White);
-        board.set(1, 2, Color::White);
-        board.set(0, 3, Color::White);
+        board.play(3, 0);
+        board.play(0, 0);
+        board.play(3, 1);
+        board.play(0, 1);
+        board.play(2, 2);
+        board.play(1, 0);
+        board.play(1, 2);
+        board.play(1, 1);
+        board.play(0, 3);
 
-        dbg!(&board);
-        dbg!(board.missing_move_to_win(Color::White));
+        assert_eq!(board.missing_move_to_win(Color::White), Some(0));
 
-        assert!(board.is_win(Color::White));
+        assert!(board.is_win());
     }
 
     #[test]
     fn is_game_over2() {
         let mut board = Board::<4>::new();
-        board.set(3, 0, Color::White);
-        board.set(3, 1, Color::White);
-        board.set(2, 2, Color::White);
-        board.set(1, 3, Color::White);
-        println!("{}", board);
-        println!("{:?}", board.missing_move_to_win(Color::White));
+        board.play(3, 0);
+        board.play(0, 0);
+        board.play(3, 1);
+        board.play(0, 1);
+        board.play(2, 2);
+        board.play(1, 0);
+        board.play(1, 3);
 
-        assert!(board.is_win(Color::White));
+        assert_eq!(board.missing_move_to_win(Color::White), Some(0));
+
+        assert!(board.is_win());
     }
 
     #[test]
     fn missing_moves() {
         let board = Board::<4>::new();
-        println!("{}", board);
 
         assert_eq!(board.missing_move_to_win(Color::White), Some(4));
         assert_eq!(board.missing_move_to_win(Color::Black), Some(4));
 
         let mut board = Board::<4>::new();
-        board.set(3, 0, Color::White);
-        board.set(3, 1, Color::White);
-        println!("{}", board);
+        board.play(3, 0);
+        board.play(0, 0);
+        board.play(3, 1);
 
         assert_eq!(board.missing_move_to_win(Color::White), Some(2));
         assert_eq!(board.missing_move_to_win(Color::Black), Some(4));
     }
 
     #[test]
-    fn reach_test() {
-        let board = Board::<11>::new();
-        //board.set(3, 0, Color::White);
-        //board.set(3, 1, Color::White);
-        println!("{}", board);
-
-        //calculate call time
-        let start = std::time::Instant::now();
-
-        for _ in 0..1000 {
-            board.missing_move_to_win(Color::White);
-        }
-
-        let duration = start.elapsed();
-        println!("Time elapsed in expensive_function() is: {:?}", duration);
-    }
-
-    #[test]
-    fn reach_test2() {
-        let mut board = Board::<11>::new();
-        board.set(3, 0, Color::White);
-        board.set(3, 1, Color::White);
-        board.set(2, 2, Color::White);
-        board.set(1, 2, Color::White);
-        board.set(0, 3, Color::White);
-        board.set(0, 4, Color::White);
-        board.set(0, 5, Color::White);
-        board.set(0, 6, Color::White);
-        board.set(1, 6, Color::White);
-        board.set(2, 6, Color::White);
-        board.set(3, 6, Color::White);
-        board.set(4, 6, Color::White);
-        board.set(5, 5, Color::White);
-        board.set(6, 5, Color::White);
-        board.set(6, 6, Color::White);
-        board.set(6, 7, Color::White);
-        board.set(6, 8, Color::White);
-        board.set(6, 9, Color::White);
-        board.set(6, 10, Color::White);
-        println!("{}", board);
-
-        //calculate call time
-        let start = std::time::Instant::now();
-
-        for _ in 0..1000 {
-            board.missing_move_to_win(Color::White);
-        }
-
-        let duration = start.elapsed();
-        println!("Time elapsed in expensive_function() is: {:?}", duration);
-    }
-
-    #[test]
     fn dist_matrix() {
         let mut board = Board::<2>::new();
-        board.set(0, 0, Color::White);
+        board.play(0, 0);
 
         let dist_matrix_white = board.get_dist_matrix(Color::White);
         assert_eq!(
@@ -641,8 +581,9 @@ mod tests {
         assert_eq!(board.missing_move_to_win2(Color::White), Some(4));
         assert_eq!(board.missing_move_to_win2(Color::Black), Some(4));
 
-        board.set(3, 0, Color::White);
-        board.set(3, 1, Color::White);
+        board.play(3, 0);
+        board.play(0, 0);
+        board.play(3, 1);
 
         assert_eq!(board.missing_move_to_win2(Color::White), Some(2));
         assert_eq!(board.missing_move_to_win2(Color::Black), Some(4));
@@ -651,27 +592,8 @@ mod tests {
     #[test]
     fn possible_moves() {
         let mut board = Board::<2>::new();
-        board.set(0, 0, Color::White);
-        println!("{}", board);
+        board.play(0, 0);
 
         assert_eq!(board.possible_moves(), vec![(0, 1), (1, 0), (1, 1)]);
-    }
-
-    #[test]
-    fn random_board_path() {
-        let start = std::time::Instant::now();
-        for _ in 0..10000 {
-            let board = Board::<3>::random_board(10);
-
-            // println!("{}", board);
-            let _possible_winner = board.winner();
-            /*match _possible_winner {
-                Some(winner) => println!("Player {} wins !", winner),
-                None => println!("No winner"),
-            }*/
-        }
-
-        let duration = start.elapsed();
-        println!("Time elapsed in expensive_function() is: {:?}", duration);
     }
 }

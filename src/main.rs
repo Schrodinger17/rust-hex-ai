@@ -34,6 +34,7 @@ fn main() {
             .add(LogFlag::Position)
             .add(LogFlag::SearchDepth)
             .add(LogFlag::Moves)
+            .add(LogFlag::Score)
             .to_owned(),
     );
 

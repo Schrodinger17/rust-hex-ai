@@ -9,9 +9,7 @@ use crate::{board::Board, player::Player};
 pub struct Game {
     board: Board,
     players: HashMap<Color, Rc<Player>>,
-    turn: Color,
     duration: Option<Duration>,
-    winner: Color,
     log_level: Rc<LogLevel>,
 }
 
@@ -20,15 +18,13 @@ impl Game {
         Game {
             board: Board::new(),
             players,
-            turn: Color::White,
             duration: None,
-            winner: Color::None,
             log_level: Rc::default(),
         }
     }
 
-    pub fn winner(&self) -> Color {
-        self.winner
+    pub fn winner(&self) -> Option<Color> {
+        self.board.winner()
     }
 
     pub fn board(&self) -> &Board {
@@ -52,8 +48,7 @@ impl Game {
 
     #[allow(unused)]
     pub fn play_random_move(&mut self) {
-        self.board.play_random_move(self.turn);
-        self.turn = self.turn.opponent();
+        self.board.play_random_move();
         if self.log_level.is(LogFlag::Position) {
             print!("{}", self.board);
         }
@@ -67,23 +62,23 @@ impl Game {
         self.play_random_move();
 
         loop {
-            let player = self.players.get(&self.turn).unwrap();
+            let player = self.players.get(&self.board.next_color()).unwrap();
 
             // Time
             let start = Instant::now();
 
-            let (x, y) = player.next_move(&self.board, self.turn);
+            let (x, y) = player.next_move(&self.board);
 
             // Time
             let duration = start.elapsed();
 
             // Update the original board with the player's move
-            self.board.set(x, y, self.turn);
+            self.board.play(x, y);
 
             if self.log_level.is(LogFlag::Moves) {
                 println!(
                     "{} played ({}, {}) in {:?}",
-                    self.turn,
+                    self.board.next_color(),
                     x + 1,
                     y + 1,
                     duration
@@ -93,15 +88,12 @@ impl Game {
                 println!("{}", self.board);
             }
 
-            if self.board.is_win(self.turn) {
-                self.winner = self.turn;
+            if let Some(winner) = self.board.winner() {
                 if self.log_level.is(LogFlag::GameResult) {
-                    println!("{} wins!", self.winner);
+                    println!("{} wins!", winner);
                 }
                 break;
             }
-
-            self.turn = self.turn.opponent();
         }
     }
 }

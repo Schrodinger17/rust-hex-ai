@@ -1,6 +1,6 @@
 use std::{rc::Rc, time::Duration};
 
-use crate::{board::Board, color::Color, strategy::Strategy};
+use crate::{board::Board, strategy::Strategy};
 
 pub struct Player {
     #[allow(unused)]
@@ -19,7 +19,7 @@ impl Player {
         }
     }
 
-    pub fn next_move(&self, board: &Board, color: Color) -> (usize, usize) {
-        self.strategy.next_move(board, color, self.time_by_move)
+    pub fn next_move(&self, board: &Board) -> (usize, usize) {
+        self.strategy.next_move(board, self.time_by_move)
     }
 }
