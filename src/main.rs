@@ -70,7 +70,7 @@ fn main() {
         Rc::new(Player::new(
             "AlphaBeta_4".to_string(),
             Rc::new(AlphaBeta4::new(
-                Rc::new(Evaluation3::new()),
+                Rc::new(Evaluation4::new()),
                 20,
                 log_level.clone(),
             )),
