@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 #[allow(unused)]
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub enum LogFlag {
     SearchDepth,
     Score,
@@ -11,7 +11,7 @@ pub enum LogFlag {
     MatchResult,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct LogLevel {
     flags: HashSet<LogFlag>,
 }

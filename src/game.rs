@@ -6,6 +6,7 @@ use crate::color::Color;
 use crate::log::{LogFlag, LogLevel};
 use crate::{board::Board, player::Player};
 
+#[derive(Clone, Debug, Default)]
 pub struct Game {
     board: Board,
     players: HashMap<Color, Rc<Player>>,
@@ -62,7 +63,10 @@ impl Game {
         self.play_random_move();
 
         loop {
-            let player = self.players.get(&self.board.next_color()).unwrap();
+            let player = match self.players.get(&self.board.next_color()) {
+                Some(player) => player.clone(),
+                None => Rc::new(Player::default()),
+            };
 
             // Time
             let start = Instant::now();
